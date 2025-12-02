@@ -12,7 +12,9 @@ namespace Repositories.Configs
 
             builder.HasIndex(t => t.Id)
                 .IsUnique()
-                .IsClustered(false);
+                .IsClustered(false)
+                .HasFilter("[DeletedAt] IS NULL");
+
 
             builder.Property(t => t.TaskSequence)
                 .UseIdentityColumn();
@@ -22,11 +24,23 @@ namespace Repositories.Configs
 
             builder.HasQueryFilter(e => e.DeletedAt == null);
 
-            builder.HasIndex(t => t.ProjectId);
-            builder.HasIndex(t => t.Status);
-            builder.HasIndex(t => t.Priority);
-            builder.HasIndex(t => t.DueDate);
-            builder.HasIndex(t => t.AssignedToId);
+            builder.HasIndex(t => t.ProjectId)
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => t.Status)
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => t.Priority)
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => t.DueDate)
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => t.AssignedToId)
+                .HasFilter("[DeletedAt] IS NULL");
+
+            builder.HasIndex(t => new { t.ProjectId, t.Status })
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => new { t.ProjectId, t.DueDate })
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => new { t.AssignedToId, t.Status })
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(t => t.Title)
                 .IsRequired()

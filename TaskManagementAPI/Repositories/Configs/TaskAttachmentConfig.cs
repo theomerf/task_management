@@ -12,7 +12,8 @@ namespace Repositories.Configs
 
             builder.HasIndex(ta => ta.Id)
                 .IsUnique()
-                .IsClustered(false);
+                .IsClustered(false)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(ta => ta.AttachmentSequence)
                 .UseIdentityColumn();
@@ -21,6 +22,9 @@ namespace Repositories.Configs
                 .HasDefaultValueSql("NEWSEQUENTIALID()");
 
             builder.HasQueryFilter(ta => ta.DeletedAt == null);
+
+            builder.HasIndex(ta => ta.TaskId)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(ta => ta.FileName)
                 .IsRequired()

@@ -12,7 +12,8 @@ namespace Repositories.Configs
 
             builder.HasIndex(p => p.Id)
                 .IsUnique()
-                .IsClustered(false);
+                .IsClustered(false)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(p => p.ProjectSequence)
                 .UseIdentityColumn();
@@ -20,8 +21,12 @@ namespace Repositories.Configs
             builder.Property(p => p.Id)
                 .HasDefaultValueSql("NEWSEQUENTIALID()");
 
-            builder.HasIndex(e => e.CreatedById);
-            builder.HasIndex(e => e.Status);
+            builder.HasQueryFilter(p => p.DeletedAt == null);
+
+            builder.HasIndex(e => e.CreatedById)
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(e => e.Status)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(p => p.Name)
                 .IsRequired()
@@ -31,7 +36,7 @@ namespace Repositories.Configs
                 .HasMaxLength(2000);
 
             builder.Property(p => p.Icon)
-                .HasMaxLength(1);
+                .HasMaxLength(10);
 
             builder.Property(p => p.Color)
                 .HasMaxLength(7);

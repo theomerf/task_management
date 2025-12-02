@@ -18,6 +18,9 @@ namespace Entities.Models
         public ProjectVisibility Visibility { get; set; } = ProjectVisibility.Private;
         public int TaskCount { get; set; } = 0;
         public int CompletedTaskCount { get; set; } = 0;
+        public DateTime? DeletedAt { get; set; }
+        [NotMapped]
+        public bool IsDeleted => DeletedAt.HasValue;
         public Account? CreatedBy { get; set; }
         public ICollection<Task> Tasks { get; set; } = new List<Task>();
         public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();

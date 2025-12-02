@@ -12,7 +12,8 @@ namespace Repositories.Configs
 
             builder.HasIndex(tl => tl.Id)
                 .IsUnique()
-                .IsClustered(false);
+                .IsClustered(false)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(tl => tl.TimeLogSequence)
                 .UseIdentityColumn();
@@ -20,11 +21,13 @@ namespace Repositories.Configs
             builder.Property(tl => tl.Id)
                 .HasDefaultValueSql("NEWSEQUENTIALID()");
 
-            builder.HasQueryFilter(tl => !tl.IsDeleted);
-
             builder.HasQueryFilter(tl => tl.DeletedAt == null);
 
-            builder.HasIndex(tl => tl.Date);
+            builder.HasIndex(tl => tl.TaskId)
+                .HasFilter("[DeletedAt] IS NULL");
+
+            builder.HasIndex(tl => tl.Date)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(tl => tl.Notes)
                 .HasMaxLength(2000);

@@ -36,12 +36,15 @@ namespace TaskManagementAPI.Infrastructure.Extensions
         public static void ConfigureRepositoryRegistration(this IServiceCollection services)
         {
             services.AddScoped<IRepositoryManager, RepositoryManager>();
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
         }
 
         public static void ConfigureServiceRegistration(this IServiceCollection services)
         {
             services.AddScoped<IServiceManager, ServiceManager>();
             services.AddScoped<IAccountService, AccountManager>();
+            services.AddScoped<IProjectService, ProjectManager>();
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
@@ -102,6 +105,18 @@ namespace TaskManagementAPI.Infrastructure.Extensions
                     ValidIssuer = jwtSettings["validIssuer"],
                     ValidAudience = jwtSettings["validAudience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        ctx.Request.Cookies.TryGetValue("accessToken", out var accessToken);
+                        if (!string.IsNullOrWhiteSpace(accessToken))
+                            ctx.Token = accessToken;
+
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    }
                 };
             });
         }

@@ -7,7 +7,7 @@ namespace Entities.Models
         public Guid Id { get; set; } = Guid.NewGuid();
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long ProjectSettingSequence { get; set; }
-        public long ProjectId { get; set; }
+        public long? ProjectId { get; set; }
         public bool EnableKanban { get; set; } = true;
         public bool EnableTimeTracking { get; set; } = true;
         public bool EnableReports { get; set; } = true;

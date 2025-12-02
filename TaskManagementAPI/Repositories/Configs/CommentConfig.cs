@@ -12,7 +12,8 @@ namespace Repositories.Configs
 
             builder.HasIndex(c => c.Id)
                 .IsUnique()
-                .IsClustered(false);
+                .IsClustered(false)
+                .HasFilter("[DeletedAt] IS NULL"); 
 
             builder.Property(c => c.CommentSequence)
                 .UseIdentityColumn();
@@ -22,7 +23,8 @@ namespace Repositories.Configs
 
             builder.HasQueryFilter(c => c.DeletedAt == null);
 
-            builder.HasIndex(c => c.TaskId);
+            builder.HasIndex(c => c.TaskId)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(c => c.Content)
                 .IsRequired()

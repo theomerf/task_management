@@ -7,7 +7,7 @@ namespace Entities.Models
         public Guid Id { get; set; } = Guid.NewGuid();
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long TaskSequence { get; set; }
-        public long ProjectId { get; set; }
+        public long? ProjectId { get; set; }
         public string? CreatedById { get; set; }
         public string? AssignedToId { get; set; }
         public string Title { get; set; } = null!;

@@ -20,6 +20,11 @@ namespace Repositories.Configs
             builder.Property(al => al.Id)
                 .HasDefaultValueSql("NEWSEQUENTIALID()");
 
+            builder.HasIndex(al => new { al.PerformedById, al.CreatedAt });
+            builder.HasIndex(al => new { al.RelatedTaskId, al.CreatedAt });
+            builder.HasIndex(al => new { al.RelatedProjectId, al.CreatedAt });
+            builder.HasIndex(al => al.Type);
+
             builder.Property(builder => builder.Description)
                 .IsRequired()
                 .HasMaxLength(1000);

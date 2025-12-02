@@ -10,15 +10,15 @@ namespace Presentation.ActionFilters
             var controller = context.RouteData.Values["controller"];
             var action = context.RouteData.Values["action"];
 
-            var param = context.ActionArguments
-                .SingleOrDefault(p => p.Value.ToString()!.Contains("Dto")).Value;
+            var dtoParam = context.ActionArguments
+                .FirstOrDefault(x => IsDtoType(x.Value?.GetType()));
 
-            if (param is null)
+            if (dtoParam.Value is null)
             {
                 context.Result = new BadRequestObjectResult(new
                 {
                     message = "Geçersiz istek verisi",
-                    errors = new { general = new[] { $"Controller: {controller}, Action: {action} - Nesne null." } }
+                    errors = new { general = new[] { $"Controller: {controller}, Action: {action} - DTO nesnesi bulunamadı." } }
                 });
                 return;
             }
@@ -38,6 +38,14 @@ namespace Presentation.ActionFilters
                     errors = errors
                 });
             }
+        }
+        
+        private bool IsDtoType(Type? type)
+        {
+            if (type is null)
+                return false;
+
+            return type.Name.Contains("Dto", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -192,14 +192,15 @@ namespace TaskManagementAPI.Migrations
                     CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    Icon = table.Column<string>(type: "nvarchar(1)", maxLength: 1, nullable: true),
+                    Icon = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     Visibility = table.Column<int>(type: "int", nullable: false),
                     TaskCount = table.Column<int>(type: "int", nullable: false),
-                    CompletedTaskCount = table.Column<int>(type: "int", nullable: false)
+                    CompletedTaskCount = table.Column<int>(type: "int", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -219,7 +220,7 @@ namespace TaskManagementAPI.Migrations
                     LabelSequence = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
@@ -273,7 +274,7 @@ namespace TaskManagementAPI.Migrations
                     ProjectSettingSequence = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: true),
                     EnableKanban = table.Column<bool>(type: "bit", nullable: false),
                     EnableTimeTracking = table.Column<bool>(type: "bit", nullable: false),
                     EnableReports = table.Column<bool>(type: "bit", nullable: false),
@@ -301,7 +302,7 @@ namespace TaskManagementAPI.Migrations
                     TaskSequence = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
-                    ProjectId = table.Column<long>(type: "bigint", nullable: false),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     AssignedToId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
@@ -617,19 +618,19 @@ namespace TaskManagementAPI.Migrations
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLogs_PerformedById",
+                name: "IX_ActivityLogs_PerformedById_CreatedAt",
                 table: "ActivityLogs",
-                column: "PerformedById");
+                columns: new[] { "PerformedById", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLogs_RelatedProjectId",
+                name: "IX_ActivityLogs_RelatedProjectId_CreatedAt",
                 table: "ActivityLogs",
-                column: "RelatedProjectId");
+                columns: new[] { "RelatedProjectId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLogs_RelatedTaskId",
+                name: "IX_ActivityLogs_RelatedTaskId_CreatedAt",
                 table: "ActivityLogs",
-                column: "RelatedTaskId");
+                columns: new[] { "RelatedTaskId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityLogs_Type",
@@ -671,14 +672,15 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_DeletedAt",
                 table: "AspNetUsers",
-                column: "DeletedAt");
+                column: "DeletedAt",
+                filter: "[DeletedAt] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_Email",
                 table: "AspNetUsers",
                 column: "Email",
                 unique: true,
-                filter: "[Email] IS NOT NULL");
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
@@ -696,7 +698,8 @@ namespace TaskManagementAPI.Migrations
                 name: "IX_Comments_Id",
                 table: "Comments",
                 column: "Id",
-                unique: true)
+                unique: true,
+                filter: "[DeletedAt] IS NULL")
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
@@ -707,7 +710,8 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Comments_TaskId",
                 table: "Comments",
-                column: "TaskId");
+                column: "TaskId",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Labels_Id",
@@ -792,19 +796,22 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_CreatedById",
                 table: "Projects",
-                column: "CreatedById");
+                column: "CreatedById",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_Id",
                 table: "Projects",
                 column: "Id",
-                unique: true)
+                unique: true,
+                filter: "[DeletedAt] IS NULL")
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_Status",
                 table: "Projects",
-                column: "Status");
+                column: "Status",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectSettings_Id",
@@ -817,7 +824,8 @@ namespace TaskManagementAPI.Migrations
                 name: "IX_ProjectSettings_ProjectId",
                 table: "ProjectSettings",
                 column: "ProjectId",
-                unique: true);
+                unique: true,
+                filter: "[ProjectId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskAttachments_CommentId",
@@ -828,13 +836,15 @@ namespace TaskManagementAPI.Migrations
                 name: "IX_TaskAttachments_Id",
                 table: "TaskAttachments",
                 column: "Id",
-                unique: true)
+                unique: true,
+                filter: "[DeletedAt] IS NULL")
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskAttachments_TaskId",
                 table: "TaskAttachments",
-                column: "TaskId");
+                column: "TaskId",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskAttachments_UploadedById",
@@ -849,7 +859,14 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_AssignedToId",
                 table: "Tasks",
-                column: "AssignedToId");
+                column: "AssignedToId",
+                filter: "[DeletedAt] IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_AssignedToId_Status",
+                table: "Tasks",
+                columns: new[] { "AssignedToId", "Status" },
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_CreatedById",
@@ -859,29 +876,46 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_DueDate",
                 table: "Tasks",
-                column: "DueDate");
+                column: "DueDate",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_Id",
                 table: "Tasks",
                 column: "Id",
-                unique: true)
+                unique: true,
+                filter: "[DeletedAt] IS NULL")
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_Priority",
                 table: "Tasks",
-                column: "Priority");
+                column: "Priority",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ProjectId",
                 table: "Tasks",
-                column: "ProjectId");
+                column: "ProjectId",
+                filter: "[DeletedAt] IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_ProjectId_DueDate",
+                table: "Tasks",
+                columns: new[] { "ProjectId", "DueDate" },
+                filter: "[DeletedAt] IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_ProjectId_Status",
+                table: "Tasks",
+                columns: new[] { "ProjectId", "Status" },
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_Status",
                 table: "Tasks",
-                column: "Status");
+                column: "Status",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogCategories_Id",
@@ -893,13 +927,15 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogs_Date",
                 table: "TimeLogs",
-                column: "Date");
+                column: "Date",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogs_Id",
                 table: "TimeLogs",
                 column: "Id",
-                unique: true)
+                unique: true,
+                filter: "[DeletedAt] IS NULL")
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
@@ -910,7 +946,8 @@ namespace TaskManagementAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogs_TaskId",
                 table: "TimeLogs",
-                column: "TaskId");
+                column: "TaskId",
+                filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogs_TimeLogCategoryId",

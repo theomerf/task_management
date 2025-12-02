@@ -11,9 +11,11 @@ namespace Repositories.Configs
             builder.HasQueryFilter(a => a.DeletedAt == null);
 
             builder.HasIndex(a => a.Email)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[DeletedAt] IS NULL");
 
-            builder.HasIndex(a => a.DeletedAt);
+            builder.HasIndex(a => a.DeletedAt)
+                .HasFilter("[DeletedAt] IS NOT NULL");
 
             builder.Property(a => a.FirstName)
                 .IsRequired()

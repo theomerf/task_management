@@ -106,11 +106,12 @@ namespace TaskManagementAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DeletedAt");
+                    b.HasIndex("DeletedAt")
+                        .HasFilter("[DeletedAt] IS NOT NULL");
 
                     b.HasIndex("Email")
                         .IsUnique()
-                        .HasFilter("[Email] IS NOT NULL");
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -173,13 +174,13 @@ namespace TaskManagementAPI.Migrations
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
-                    b.HasIndex("PerformedById");
-
-                    b.HasIndex("RelatedProjectId");
-
-                    b.HasIndex("RelatedTaskId");
-
                     b.HasIndex("Type");
+
+                    b.HasIndex("PerformedById", "CreatedAt");
+
+                    b.HasIndex("RelatedProjectId", "CreatedAt");
+
+                    b.HasIndex("RelatedTaskId", "CreatedAt");
 
                     b.ToTable("ActivityLogs");
                 });
@@ -228,13 +229,15 @@ namespace TaskManagementAPI.Migrations
                     b.HasIndex("AuthorId");
 
                     b.HasIndex("Id")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
                     b.HasIndex("ParentCommentId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskId")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.ToTable("Comments");
                 });
@@ -269,7 +272,7 @@ namespace TaskManagementAPI.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<long>("ProjectId")
+                    b.Property<long?>("ProjectId")
                         .HasColumnType("bigint");
 
                     b.HasKey("LabelSequence");
@@ -422,13 +425,16 @@ namespace TaskManagementAPI.Migrations
                     b.Property<string>("CreatedById")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Icon")
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -454,14 +460,17 @@ namespace TaskManagementAPI.Migrations
 
                     b.HasKey("ProjectSequence");
 
-                    b.HasIndex("CreatedById");
+                    b.HasIndex("CreatedById")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("Id")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
-                    b.HasIndex("Status");
+                    b.HasIndex("Status")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.ToTable("Projects");
                 });
@@ -538,7 +547,7 @@ namespace TaskManagementAPI.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("NEWSEQUENTIALID()");
 
-                    b.Property<long>("ProjectId")
+                    b.Property<long?>("ProjectId")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("SendEmailNotifications")
@@ -558,7 +567,8 @@ namespace TaskManagementAPI.Migrations
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
                     b.HasIndex("ProjectId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[ProjectId] IS NOT NULL");
 
                     b.ToTable("ProjectSettings");
                 });
@@ -608,7 +618,7 @@ namespace TaskManagementAPI.Migrations
                     b.Property<int>("ProgressPercentage")
                         .HasColumnType("int");
 
-                    b.Property<long>("ProjectId")
+                    b.Property<long?>("ProjectId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("StartDate")
@@ -631,22 +641,37 @@ namespace TaskManagementAPI.Migrations
 
                     b.HasKey("TaskSequence");
 
-                    b.HasIndex("AssignedToId");
+                    b.HasIndex("AssignedToId")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("DueDate");
+                    b.HasIndex("DueDate")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("Id")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
-                    b.HasIndex("Priority");
+                    b.HasIndex("Priority")
+                        .HasFilter("[DeletedAt] IS NULL");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("ProjectId")
+                        .HasFilter("[DeletedAt] IS NULL");
 
-                    b.HasIndex("Status");
+                    b.HasIndex("Status")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("AssignedToId", "Status")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("ProjectId", "DueDate")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("ProjectId", "Status")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.ToTable("Tasks");
                 });
@@ -706,11 +731,13 @@ namespace TaskManagementAPI.Migrations
                     b.HasIndex("CommentId");
 
                     b.HasIndex("Id")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskId")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("UploadedById");
 
@@ -762,16 +789,19 @@ namespace TaskManagementAPI.Migrations
 
                     b.HasKey("TimeLogSequence");
 
-                    b.HasIndex("Date");
+                    b.HasIndex("Date")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("Id")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
                     b.HasIndex("LoggedById");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskId")
+                        .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("TimeLogCategoryId");
 
@@ -1035,8 +1065,7 @@ namespace TaskManagementAPI.Migrations
                     b.HasOne("Entities.Models.Project", "Project")
                         .WithMany("Labels")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Project");
                 });
@@ -1124,8 +1153,7 @@ namespace TaskManagementAPI.Migrations
                     b.HasOne("Entities.Models.Project", "Project")
                         .WithOne("Settings")
                         .HasForeignKey("Entities.Models.ProjectSetting", "ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Project");
                 });
@@ -1145,8 +1173,7 @@ namespace TaskManagementAPI.Migrations
                     b.HasOne("Entities.Models.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("AssignedTo");
 
