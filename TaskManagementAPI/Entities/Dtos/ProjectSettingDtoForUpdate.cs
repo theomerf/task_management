@@ -1,7 +1,10 @@
-﻿namespace Entities.Dtos
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Entities.Dtos
 {
     public record ProjectSettingDtoForUpdate : ProjectSettingDtoForCreation
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        [Required(ErrorMessage = "Id alanı gereklidir.")]
+        public Guid Id { get; set; }
     }
 }

@@ -10,6 +10,7 @@ namespace Entities.Models
         public long? ProjectId { get; set; }
         public string? CreatedById { get; set; }
         public string? AssignedToId { get; set; }
+        public long? LabelId { get; set; }
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public TaskStatus Status { get; set; } = TaskStatus.ToDo;
@@ -28,8 +29,8 @@ namespace Entities.Models
         public Project? Project { get; set; }
         public Account? CreatedBy { get; set; }
         public Account? AssignedTo { get; set; }
+        public Label? Label { get; set; }
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
-        public ICollection<Label> Labels { get; set; } = new List<Label>();
         public ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
         public ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
         public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();

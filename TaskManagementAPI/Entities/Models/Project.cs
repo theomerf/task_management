@@ -25,6 +25,7 @@ namespace Entities.Models
         public ICollection<Task> Tasks { get; set; } = new List<Task>();
         public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
         public ICollection<Label> Labels { get; set; } = new List<Label>();
+        public ICollection<TimeLogCategory> TimeLogCategories { get; set; } = new List<TimeLogCategory>();
         public ProjectSetting Settings { get; set; } = null!;
         public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
     }

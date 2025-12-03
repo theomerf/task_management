@@ -1,5 +1,4 @@
 ﻿using Entities.Models;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entities.Dtos
 {
@@ -17,7 +16,5 @@ namespace Entities.Dtos
         public int TaskCount { get; init; }
         public int CompletedTaskCount { get; init; }
         public ICollection<TaskDto> Tasks { get; init; } = new List<TaskDto>();
-        public ICollection<LabelDto> Labels { get; init; } = new List<LabelDto>();
-        public ProjectSettingDto Settings { get; init; } = null!;
     }
 }

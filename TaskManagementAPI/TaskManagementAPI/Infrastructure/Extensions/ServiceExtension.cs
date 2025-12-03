@@ -38,6 +38,7 @@ namespace TaskManagementAPI.Infrastructure.Extensions
             services.AddScoped<IRepositoryManager, RepositoryManager>();
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
+            services.AddScoped<ITaskRepository, TaskRepository>();
         }
 
         public static void ConfigureServiceRegistration(this IServiceCollection services)
@@ -45,6 +46,7 @@ namespace TaskManagementAPI.Infrastructure.Extensions
             services.AddScoped<IServiceManager, ServiceManager>();
             services.AddScoped<IAccountService, AccountManager>();
             services.AddScoped<IProjectService, ProjectManager>();
+            services.AddScoped<ITaskService, TaskManager>();
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)

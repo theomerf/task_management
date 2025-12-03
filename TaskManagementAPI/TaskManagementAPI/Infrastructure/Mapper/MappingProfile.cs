@@ -23,6 +23,15 @@ namespace TaskManagementAPI.Infrastructure.Mapper
             CreateMap<ProjectSettingDtoForUpdate, ProjectSetting>();
             CreateMap<LabelDto, Label>();
             CreateMap<TaskDto, Entities.Models.Task>();
+            CreateMap<Label, LabelDto>();
+            CreateMap<LabelDtoForCreation, Label>();
+            CreateMap<LabelDtoForUpdate, Label>();
+            CreateMap<ProjectMember, ProjectMemberDto>()
+                .ForMember(dest => dest.AccountEmail, opt => opt.MapFrom(src => src.Account!.Email))
+                .ForMember(dest => dest.AccountFirstName, opt => opt.MapFrom(src => src.Account!.FirstName))
+                .ForMember(dest => dest.AccountLastName, opt => opt.MapFrom(src => src.Account!.LastName));
+            CreateMap<ProjectMemberDtoForCreation, ProjectMember>();
+            CreateMap<ProjectMemberDtoForUpdate, ProjectMember>();
         }
     }
 }

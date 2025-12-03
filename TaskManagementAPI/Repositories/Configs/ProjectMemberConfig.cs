@@ -23,6 +23,8 @@ namespace Repositories.Configs
             builder.HasIndex(pm => new { pm.ProjectId, pm.AccountId })
                 .IsUnique();
 
+            builder.HasIndex(pm => new { pm.AccountId, pm.Role });
+
             builder.HasQueryFilter(pm => pm.Account!.DeletedAt == null);
 
             builder.HasOne(pm => pm.Project)

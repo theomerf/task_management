@@ -37,7 +37,9 @@ namespace Repositories.Configs
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(l => l.Tasks)
-                .WithMany(t => t.Labels);
+                .WithOne(t => t.Label)
+                .HasForeignKey(t => t.LabelId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

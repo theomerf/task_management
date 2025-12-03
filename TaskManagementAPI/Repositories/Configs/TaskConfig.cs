@@ -15,7 +15,6 @@ namespace Repositories.Configs
                 .IsClustered(false)
                 .HasFilter("[DeletedAt] IS NULL");
 
-
             builder.Property(t => t.TaskSequence)
                 .UseIdentityColumn();
 
@@ -75,22 +74,10 @@ namespace Repositories.Configs
                 .HasForeignKey(c => c.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(t => t.Labels)
+            builder.HasOne(t => t.Label)
                 .WithMany(l => l.Tasks)
-                .UsingEntity<Dictionary<string, object>>(j =>
-                {
-                    j.ToTable("TaskLabels");
-
-                    j.HasOne<Entities.Models.Task>()
-                        .WithMany()
-                        .HasForeignKey("TaskSequence")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    j.HasOne<Entities.Models.Label>()
-                        .WithMany()
-                        .HasForeignKey("LabelSequence")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
+                .HasForeignKey(t => t.LabelId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasMany(t => t.Attachments)
                 .WithOne(ta => ta.Task)

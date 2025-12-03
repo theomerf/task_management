@@ -69,9 +69,15 @@ namespace Repositories.Extensions
             if (role == null)
                 return query;
 
-            query.Where(p => p.Members.Any(m => m.AccountId == accountId && m.Role == role));
+            return query.Where(p => p.Members.Any(m => m.AccountId == accountId && m.Role == role));
+        }
 
-            return query;
+        public static IQueryable<Entities.Models.Task> FilterByMe(this IQueryable<Entities.Models.Task> query, bool? me, string accountId)
+        {
+            if (me == null)
+                return query;
+
+            return query.Where(t => t.AssignedToId == accountId);
         }
     }
 }

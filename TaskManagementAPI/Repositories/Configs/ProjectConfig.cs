@@ -27,6 +27,10 @@ namespace Repositories.Configs
                 .HasFilter("[DeletedAt] IS NULL");
             builder.HasIndex(e => e.Status)
                 .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(e => e.Visibility)
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(e => e.Name)
+                .HasFilter("[DeletedAt] IS NULL");
 
             builder.Property(p => p.Name)
                 .IsRequired()
@@ -70,6 +74,11 @@ namespace Repositories.Configs
                 .WithOne(al => al.RelatedProject)
                 .HasForeignKey(al => al.RelatedProjectId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasMany(p => p.TimeLogCategories)
+                .WithOne(tlc => tlc.Project)
+                .HasForeignKey(tlc => tlc.ProjectId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

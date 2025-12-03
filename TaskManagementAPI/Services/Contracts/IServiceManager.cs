@@ -4,5 +4,6 @@
     {
         IAccountService AccountService { get; }
         IProjectService ProjectService { get; }
+        ITaskService TaskService { get; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entities.Models
 {
@@ -10,7 +11,9 @@ namespace Entities.Models
         public long TaskId { get; set; }
         public string LoggedById { get; set; } = null!;
         public long? TimeLogCategoryId { get; set; }
-        public decimal Hours { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public decimal Hours => (decimal)(EndTime - StartTime).TotalHours;
         public DateTime Date { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -28,9 +31,11 @@ namespace Entities.Models
         public Guid Id { get; set; } = Guid.NewGuid();
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long TimeLogCategorySequence { get; set; }
+        public long ProjectId { get; set; }
         public string Name { get; set; } = null!;
         public string Color { get; set; } = "#3B82F6";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public Project? Project { get; set; }
         public ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
     }
 }

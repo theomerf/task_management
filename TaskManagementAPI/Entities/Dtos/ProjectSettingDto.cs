@@ -5,7 +5,6 @@ namespace Entities.Dtos
     public record ProjectSettingDto
     {
         public Guid Id { get; init; }
-        public long ProjectId { get; init; }
         public bool EnableKanban { get; init; }
         public bool EnableTimeTracking { get; init; }
         public bool EnableReports { get; init; }
