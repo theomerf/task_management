@@ -1,5 +1,4 @@
-﻿using Entities.Exceptions
-namespace Entities.Dtos
+﻿namespace Entities.Exceptions
 {
     public class TimeLogNotFoundException : NotFoundException
     {

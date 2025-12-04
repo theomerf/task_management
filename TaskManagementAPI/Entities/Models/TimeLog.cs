@@ -13,6 +13,7 @@ namespace Entities.Models
         public long? TimeLogCategoryId { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        [NotMapped]
         public decimal Hours => (decimal)(EndTime - StartTime).TotalHours;
         public DateTime Date { get; set; } = DateTime.UtcNow;
         public string? Notes { get; set; }
@@ -31,7 +32,7 @@ namespace Entities.Models
         public Guid Id { get; set; } = Guid.NewGuid();
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long TimeLogCategorySequence { get; set; }
-        public long ProjectId { get; set; }
+        public long? ProjectId { get; set; }
         public string Name { get; set; } = null!;
         public string Color { get; set; } = "#3B82F6";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

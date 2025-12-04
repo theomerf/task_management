@@ -32,9 +32,6 @@ namespace Repositories.Configs
             builder.Property(tl => tl.Notes)
                 .HasMaxLength(2000);
 
-            builder.Property(tl => tl.Hours)
-                .HasPrecision(8, 2);
-
             builder.HasOne(tl => tl.Task)
                 .WithMany(t => t.TimeLogs)
                 .HasForeignKey(tl => tl.TaskId)

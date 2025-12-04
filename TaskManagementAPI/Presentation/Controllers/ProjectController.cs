@@ -37,7 +37,7 @@ namespace Presentation.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetOneProject([FromRoute] Guid id)
+        public async Task<IActionResult> GetProjectById([FromRoute] Guid id)
         {
             var project = await _manager.ProjectService.GetProjectByIdAsync(id, UserId!, IsAdmin);
 

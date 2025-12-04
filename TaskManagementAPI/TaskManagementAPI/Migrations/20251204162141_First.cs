@@ -61,22 +61,6 @@ namespace TaskManagementAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TimeLogCategories",
-                columns: table => new
-                {
-                    TimeLogCategorySequence = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TimeLogCategories", x => x.TimeLogCategorySequence);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -296,6 +280,29 @@ namespace TaskManagementAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "TimeLogCategories",
+                columns: table => new
+                {
+                    TimeLogCategorySequence = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
+                    ProjectId = table.Column<long>(type: "bigint", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TimeLogCategories", x => x.TimeLogCategorySequence);
+                    table.ForeignKey(
+                        name: "FK_TimeLogCategories_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "ProjectSequence",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tasks",
                 columns: table => new
                 {
@@ -305,6 +312,7 @@ namespace TaskManagementAPI.Migrations
                     ProjectId = table.Column<long>(type: "bigint", nullable: true),
                     CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     AssignedToId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    LabelId = table.Column<long>(type: "bigint", nullable: true),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
@@ -333,11 +341,16 @@ namespace TaskManagementAPI.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
+                        name: "FK_Tasks_Labels_LabelId",
+                        column: x => x.LabelId,
+                        principalTable: "Labels",
+                        principalColumn: "LabelSequence",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "FK_Tasks_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "ProjectSequence",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "ProjectSequence");
                 });
 
             migrationBuilder.CreateTable(
@@ -463,29 +476,6 @@ namespace TaskManagementAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskLabels",
-                columns: table => new
-                {
-                    LabelSequence = table.Column<long>(type: "bigint", nullable: false),
-                    TaskSequence = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TaskLabels", x => new { x.LabelSequence, x.TaskSequence });
-                    table.ForeignKey(
-                        name: "FK_TaskLabels_Labels_LabelSequence",
-                        column: x => x.LabelSequence,
-                        principalTable: "Labels",
-                        principalColumn: "LabelSequence",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TaskLabels_Tasks_TaskSequence",
-                        column: x => x.TaskSequence,
-                        principalTable: "Tasks",
-                        principalColumn: "TaskSequence");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "TimeLogs",
                 columns: table => new
                 {
@@ -495,7 +485,8 @@ namespace TaskManagementAPI.Migrations
                     TaskId = table.Column<long>(type: "bigint", nullable: false),
                     LoggedById = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TimeLogCategoryId = table.Column<long>(type: "bigint", nullable: true),
-                    Hours = table.Column<decimal>(type: "decimal(8,2)", precision: 8, scale: 2, nullable: false),
+                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Notes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -775,9 +766,9 @@ namespace TaskManagementAPI.Migrations
                 column: "RelatedTaskId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProjectMembers_AccountId",
+                name: "IX_ProjectMembers_AccountId_Role",
                 table: "ProjectMembers",
-                column: "AccountId");
+                columns: new[] { "AccountId", "Role" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectMembers_Id",
@@ -808,9 +799,21 @@ namespace TaskManagementAPI.Migrations
                 .Annotation("SqlServer:Clustered", false);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Projects_Name",
+                table: "Projects",
+                column: "Name",
+                filter: "[DeletedAt] IS NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_Status",
                 table: "Projects",
                 column: "Status",
+                filter: "[DeletedAt] IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_Visibility",
+                table: "Projects",
+                column: "Visibility",
                 filter: "[DeletedAt] IS NULL");
 
             migrationBuilder.CreateIndex(
@@ -852,11 +855,6 @@ namespace TaskManagementAPI.Migrations
                 column: "UploadedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskLabels_TaskSequence",
-                table: "TaskLabels",
-                column: "TaskSequence");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_AssignedToId",
                 table: "Tasks",
                 column: "AssignedToId",
@@ -886,6 +884,11 @@ namespace TaskManagementAPI.Migrations
                 unique: true,
                 filter: "[DeletedAt] IS NULL")
                 .Annotation("SqlServer:Clustered", false);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_LabelId",
+                table: "Tasks",
+                column: "LabelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_Priority",
@@ -923,6 +926,11 @@ namespace TaskManagementAPI.Migrations
                 column: "Id",
                 unique: true)
                 .Annotation("SqlServer:Clustered", false);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeLogCategories_ProjectId",
+                table: "TimeLogCategories",
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TimeLogs_Date",
@@ -992,9 +1000,6 @@ namespace TaskManagementAPI.Migrations
                 name: "TaskAttachments");
 
             migrationBuilder.DropTable(
-                name: "TaskLabels");
-
-            migrationBuilder.DropTable(
                 name: "TimeLogs");
 
             migrationBuilder.DropTable(
@@ -1004,13 +1009,13 @@ namespace TaskManagementAPI.Migrations
                 name: "Comments");
 
             migrationBuilder.DropTable(
-                name: "Labels");
-
-            migrationBuilder.DropTable(
                 name: "TimeLogCategories");
 
             migrationBuilder.DropTable(
                 name: "Tasks");
+
+            migrationBuilder.DropTable(
+                name: "Labels");
 
             migrationBuilder.DropTable(
                 name: "Projects");

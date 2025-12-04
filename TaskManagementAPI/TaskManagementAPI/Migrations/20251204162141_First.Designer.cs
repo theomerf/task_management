@@ -12,7 +12,7 @@ using Repositories;
 namespace TaskManagementAPI.Migrations
 {
     [DbContext(typeof(RepositoryContext))]
-    [Migration("20251202150610_First")]
+    [Migration("20251204162141_First")]
     partial class First
     {
         /// <inheritdoc />
@@ -472,7 +472,13 @@ namespace TaskManagementAPI.Migrations
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
+                    b.HasIndex("Name")
+                        .HasFilter("[DeletedAt] IS NULL");
+
                     b.HasIndex("Status")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("Visibility")
                         .HasFilter("[DeletedAt] IS NULL");
 
                     b.ToTable("Projects");
@@ -508,12 +514,12 @@ namespace TaskManagementAPI.Migrations
 
                     b.HasKey("ProjectMemberSequence");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("Id")
                         .IsUnique();
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
+
+                    b.HasIndex("AccountId", "Role");
 
                     b.HasIndex("ProjectId", "AccountId")
                         .IsUnique()
@@ -615,6 +621,9 @@ namespace TaskManagementAPI.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("NEWSEQUENTIALID()");
 
+                    b.Property<long?>("LabelId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
@@ -657,6 +666,8 @@ namespace TaskManagementAPI.Migrations
                         .HasFilter("[DeletedAt] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
+
+                    b.HasIndex("LabelId");
 
                     b.HasIndex("Priority")
                         .HasFilter("[DeletedAt] IS NULL");
@@ -764,9 +775,8 @@ namespace TaskManagementAPI.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("Hours")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("decimal(8,2)");
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -780,6 +790,9 @@ namespace TaskManagementAPI.Migrations
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("TaskId")
                         .HasColumnType("bigint");
@@ -821,7 +834,8 @@ namespace TaskManagementAPI.Migrations
 
                     b.Property<string>("Color")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -836,6 +850,9 @@ namespace TaskManagementAPI.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<long?>("ProjectId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("TimeLogCategorySequence");
 
                     b.HasIndex("Id")
@@ -843,22 +860,9 @@ namespace TaskManagementAPI.Migrations
 
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
 
+                    b.HasIndex("ProjectId");
+
                     b.ToTable("TimeLogCategories");
-                });
-
-            modelBuilder.Entity("LabelTask", b =>
-                {
-                    b.Property<long>("LabelSequence")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TaskSequence")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("LabelSequence", "TaskSequence");
-
-                    b.HasIndex("TaskSequence");
-
-                    b.ToTable("TaskLabels", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1173,14 +1177,21 @@ namespace TaskManagementAPI.Migrations
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("Entities.Models.Label", "Label")
+                        .WithMany("Tasks")
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Entities.Models.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("AssignedTo");
 
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("Label");
 
                     b.Navigation("Project");
                 });
@@ -1236,19 +1247,14 @@ namespace TaskManagementAPI.Migrations
                     b.Navigation("TimeLogCategory");
                 });
 
-            modelBuilder.Entity("LabelTask", b =>
+            modelBuilder.Entity("Entities.Models.TimeLogCategory", b =>
                 {
-                    b.HasOne("Entities.Models.Label", null)
-                        .WithMany()
-                        .HasForeignKey("LabelSequence")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Entities.Models.Project", "Project")
+                        .WithMany("TimeLogCategories")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("Entities.Models.Task", null)
-                        .WithMany()
-                        .HasForeignKey("TaskSequence")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1330,6 +1336,11 @@ namespace TaskManagementAPI.Migrations
                     b.Navigation("Replies");
                 });
 
+            modelBuilder.Entity("Entities.Models.Label", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
             modelBuilder.Entity("Entities.Models.Project", b =>
                 {
                     b.Navigation("ActivityLogs");
@@ -1342,6 +1353,8 @@ namespace TaskManagementAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Tasks");
+
+                    b.Navigation("TimeLogCategories");
                 });
 
             modelBuilder.Entity("Entities.Models.Task", b =>

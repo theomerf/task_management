@@ -97,6 +97,30 @@ namespace Services
             await _manager.SaveAsync();
         }
 
+        public async System.Threading.Tasks.Task UpdateTaskStatusAsync(Guid projectId, TaskDtoForStatusUpdate taskDto, string accountId, bool isAdmin)
+        {
+            var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
+
+            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, true);
+            _mapper.Map(taskDto, task);
+
+            task.UpdatedAt = DateTime.UtcNow;
+
+            await _manager.SaveAsync();
+        }
+
+        public async System.Threading.Tasks.Task UpdateTaskPriorityAsync(Guid projectId, TaskDtoForPriorityUpdate taskDto, string accountId, bool isAdmin)
+        {
+            var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
+
+            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, true);
+            _mapper.Map(taskDto, task);
+
+            task.UpdatedAt = DateTime.UtcNow;
+
+            await _manager.SaveAsync();
+        }
+
         public async System.Threading.Tasks.Task DeleteTaskAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin)
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev silme yetkiniz bulunmamaktadır.", isAdmin, true);
@@ -148,7 +172,7 @@ namespace Services
             await _manager.SaveAsync();
         }
 
-        public async System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, TaskAttachmentForUpdate attachmentDto, string accountId, bool isAdmin)
+        public async System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForUpdate attachmentDto, string accountId, bool isAdmin)
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev eki düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
 

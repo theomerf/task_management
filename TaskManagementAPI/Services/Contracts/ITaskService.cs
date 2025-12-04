@@ -11,13 +11,15 @@ namespace Services.Contracts
         Task<TaskDetailsDto> GetTaskByIdAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
         System.Threading.Tasks.Task CreateTaskAsync(Guid projectId, TaskDtoForCreation taskDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task UpdateTaskAsync(Guid projectId, TaskDtoForUpdate taskDto, string accountId, bool isAdmin);
+        System.Threading.Tasks.Task UpdateTaskStatusAsync(Guid projectId, TaskDtoForStatusUpdate taskDto, string accountId, bool isAdmin);
+        System.Threading.Tasks.Task UpdateTaskPriorityAsync(Guid projectId, TaskDtoForPriorityUpdate taskDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task DeleteTaskAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
 
         // Attachment
         Task<IEnumerable<TaskAttachmentDto>> GetTaskAttachmentsAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
         Task<TaskAttachmentDetailsDto> GetTaskAttachmentByIdAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin);
         System.Threading.Tasks.Task CreateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForCreation attachmentDto, string accountId, bool isAdmin);
-        System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, TaskAttachmentForUpdate attachmentDto, string accountId, bool isAdmin);
+        System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForUpdate attachmentDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task DeleteTaskAttachmentAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin);
 
         // TimeLog

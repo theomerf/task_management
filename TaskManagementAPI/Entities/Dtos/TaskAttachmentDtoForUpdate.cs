@@ -2,7 +2,7 @@
 
 namespace Entities.Dtos
 {
-    public record TaskAttachmentForUpdate
+    public record TaskAttachmentDtoForUpdate
     {
         [Required(ErrorMessage = "Id alanı gereklidir.")]
         public Guid Id { get; set; }

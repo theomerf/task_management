@@ -57,7 +57,7 @@ namespace Repositories.Configs
             builder.HasOne(t => t.Project)
                 .WithMany(p => p.Tasks)
                 .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasOne(t => t.CreatedBy)
                 .WithMany(a => a.CreatedTasks)
