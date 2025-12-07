@@ -18,6 +18,9 @@ namespace Repositories
         public async Task<(IEnumerable<ProjectDto> projects, int totalCount)> GetAllProjectsForAdminAsync(ProjectRequestParametersForAdmin p, bool trackChanges)
         {
             var projectsQuery = FindAll(trackChanges)
+                .Include(p => p.CreatedBy)
+                .Include(p => p.Members)
+                .AsSplitQuery()
                 .FilterBy(p.Name, p => p.Name, FilterOperator.Contains)
                 .FilterBy(p.Status, p => p.Status, FilterOperator.Equal)
                 .FilterBy(p.Visibility, p => p.Visibility, FilterOperator.Equal);
@@ -27,6 +30,8 @@ namespace Repositories
                 projectsQuery = projectsQuery
                     .IgnoreQueryFilters();
             }
+
+            var totalCount = await projectsQuery.CountAsync();
 
             var projects = await projectsQuery
                 .Select(project => new ProjectDto
@@ -46,14 +51,15 @@ namespace Repositories
                 .ToPaginate(p.PageNumber, p.PageSize)
                 .ToListAsync();
 
-            var totalCount = await projectsQuery.CountAsync();
-
             return (projects, totalCount);
         }
 
         public async Task<IEnumerable<ProjectDto>> GetUsersProjectsAsync(string accountId, ProjectRequestParameters p, bool trackChanges)
         {
             var projects = await FindByCondition(p => p.CreatedById == accountId || p.Members.Any(m => m.AccountId == accountId && m.LeftAt == null), trackChanges)
+                .Include(p => p.CreatedBy)
+                .Include(p => p.Members)
+                .AsSplitQuery()
                 .FilterBy(p.Name, p => p.Name, FilterOperator.Contains)
                 .FilterBy(p.Status, p => p.Status, FilterOperator.Equal)
                 .FilterBy(p.Visibility, p => p.Visibility, FilterOperator.Equal)
@@ -77,11 +83,27 @@ namespace Repositories
             return projects;
         }
 
-        public async Task<Project?> GetProjectByIdAsync(Guid projectId, bool trackChanges)
+        public async Task<Project?> GetProjectByIdAsync(Guid projectId, bool forDelete, bool trackChanges)
         {
-            var project = await FindByCondition(p => p.Id == projectId, trackChanges)
-                .Include(p => p.Tasks)
-                .Include(p => p.Members)
+            var projectQuery = FindByCondition(p => p.Id == projectId, trackChanges)
+                .Include(p => p.Members);
+
+            if (forDelete)
+            {
+                var projectForDelete = await projectQuery
+                                .Include(p => p.Tasks)
+                                    .ThenInclude(t => t.Comments)
+                                .Include(p => p.Tasks)
+                                    .ThenInclude(t => t.Attachments)
+                                .Include(p => p.Tasks)
+                                    .ThenInclude(t => t.TimeLogs)
+                                .AsSplitQuery()
+                                .FirstOrDefaultAsync();
+
+                return projectForDelete;
+            }
+
+            var project = await projectQuery
                 .FirstOrDefaultAsync();
 
             return project;
@@ -92,6 +114,12 @@ namespace Repositories
             var project = await FindByCondition(p => p.Id == projectId, trackChanges)
                 .IgnoreQueryFilters()
                 .Include(p => p.Tasks)
+                    .ThenInclude(t => t.Comments)
+                .Include(p => p.Tasks)
+                     .ThenInclude(t => t.Attachments)
+                .Include(p => p.Tasks)
+                     .ThenInclude(t => t.TimeLogs)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync();
 
             return project;

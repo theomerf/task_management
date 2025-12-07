@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Repositories.Configs
 {
-    public class TaskAttachmentConfig : IEntityTypeConfiguration<TaskAttachment>
+    public class AttachmentConfig : IEntityTypeConfiguration<Attachment>
     {
-        public void Configure(EntityTypeBuilder<TaskAttachment> builder)
+        public void Configure(EntityTypeBuilder<Attachment> builder)
         {
             builder.HasKey(ta => ta.AttachmentSequence);
 
@@ -49,7 +49,7 @@ namespace Repositories.Configs
             builder.HasOne(ta => ta.Comment)
                 .WithMany(t => t.Attachments)
                 .HasForeignKey(ta => ta.CommentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(ta => ta.UploadedBy)
                 .WithMany()

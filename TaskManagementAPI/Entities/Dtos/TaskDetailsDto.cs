@@ -25,7 +25,5 @@ namespace Entities.Dtos
         public decimal? EstimatedHours { get; init; }
         public decimal TotalHoursSpent { get; init; } = 0;
         public int ProgressPercentage { get; init; }
-        public int CommentCount { get; init; }
-        public int AttachmentCount { get; init; }
     }
 }

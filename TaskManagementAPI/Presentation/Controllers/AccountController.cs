@@ -88,7 +88,6 @@ namespace Presentation.Controllers
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var userInfo = await _manager.AccountService.GetCurrentUserInfoAsync(userId!);
 
             return Ok(userInfo);

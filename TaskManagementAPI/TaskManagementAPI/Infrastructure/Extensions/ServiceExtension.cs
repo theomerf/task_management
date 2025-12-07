@@ -39,6 +39,9 @@ namespace TaskManagementAPI.Infrastructure.Extensions
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
             services.AddScoped<ITaskRepository, TaskRepository>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
+            services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();  
         }
 
         public static void ConfigureServiceRegistration(this IServiceCollection services)
@@ -47,6 +50,9 @@ namespace TaskManagementAPI.Infrastructure.Extensions
             services.AddScoped<IAccountService, AccountManager>();
             services.AddScoped<IProjectService, ProjectManager>();
             services.AddScoped<ITaskService, TaskManager>();
+            services.AddScoped<ICommentService, CommentManager>();
+            services.AddScoped<IActivityLogService, ActivityLogManager>();
+            services.AddScoped<INotificationService, NotificationManager>();    
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
@@ -159,32 +165,7 @@ namespace TaskManagementAPI.Infrastructure.Extensions
 
         public static void ConfigureSwagger(this IServiceCollection services)
         {
-            services.AddSwaggerGen(s =>
-            {
-                s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-                {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter a valid token",
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
-
-                s.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id= "Bearer"
-                            }
-                        },
-                        new List<string>()
-                    }
-                });
-            });
+            services.AddSwaggerGen();
         }
 
         public static void ConfigureLocalization(this IServiceCollection services)

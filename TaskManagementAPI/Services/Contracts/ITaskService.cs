@@ -16,10 +16,10 @@ namespace Services.Contracts
         System.Threading.Tasks.Task DeleteTaskAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
 
         // Attachment
-        Task<IEnumerable<TaskAttachmentDto>> GetTaskAttachmentsAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
-        Task<TaskAttachmentDetailsDto> GetTaskAttachmentByIdAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin);
-        System.Threading.Tasks.Task CreateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForCreation attachmentDto, string accountId, bool isAdmin);
-        System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForUpdate attachmentDto, string accountId, bool isAdmin);
+        Task<IEnumerable<AttachmentDto>> GetTaskAttachmentsAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
+        Task<AttachmentDetailsDto> GetTaskAttachmentByIdAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin);
+        System.Threading.Tasks.Task CreateTaskAttachmentAsync(Guid projectId, AttachmentDtoForCreation attachmentDto, string accountId, bool isAdmin);
+        System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, AttachmentDtoForUpdate attachmentDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task DeleteTaskAttachmentAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin);
 
         // TimeLog

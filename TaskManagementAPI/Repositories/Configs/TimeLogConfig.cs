@@ -21,7 +21,7 @@ namespace Repositories.Configs
             builder.Property(tl => tl.Id)
                 .HasDefaultValueSql("NEWSEQUENTIALID()");
 
-            builder.HasQueryFilter(tl => tl.DeletedAt == null);
+            builder.HasQueryFilter(tl => tl.DeletedAt == null && tl.Task!.DeletedAt == null);
 
             builder.HasIndex(tl => tl.TaskId)
                 .HasFilter("[DeletedAt] IS NULL");

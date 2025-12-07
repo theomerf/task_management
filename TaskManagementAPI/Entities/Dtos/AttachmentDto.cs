@@ -1,6 +1,6 @@
 ﻿namespace Entities.Dtos
 {
-    public record TaskAttachmentDto
+    public record AttachmentDto
     {
         public Guid Id { get; init; }
         public string FileUrl { get; init; } = null!;

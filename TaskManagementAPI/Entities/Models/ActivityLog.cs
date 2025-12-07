@@ -25,22 +25,25 @@ namespace Entities.Models
         TaskCreated = 0,
         TaskUpdated = 1,
         TaskStatusChanged = 2,
-        TaskAssigned = 3,
-        TaskCompleted = 4,
-        TaskDeleted = 5,
+        TaskPriorityChanged = 3,
+        TaskAssigned = 4,
+        TaskCompleted = 5,
+        TaskDeleted = 9,
 
         ProjectCreated = 10,
         ProjectUpdated = 11,
         ProjectArchived = 12,
-        ProjectDeleted = 13,
+        ProjectRestored = 13,
+        ProjectCompleted = 14,
+        ProjectDeleted = 19,
 
         MemberAdded = 20,
-        MemberRemoved = 21,
-        MemberRoleChanged = 22,
+        MemberRoleChanged = 21,
+        MemberRemoved = 29,
 
         CommentAdded = 30,
         CommentUpdated = 31,
-        CommentDeleted = 32,
+        CommentDeleted = 39,
 
         TimeLogAdded = 40
     }

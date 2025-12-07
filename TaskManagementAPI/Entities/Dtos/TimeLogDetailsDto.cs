@@ -9,6 +9,8 @@ namespace Entities.Dtos
         public string LoggedByEmail { get; init; } = null!;
         public string LoggedByFirstName { get; init; } = null!;
         public string LoggedByLastName { get; init; } = null!;
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
         public decimal Hours { get; init; }
         public DateTime Date { get; init; }
         public string? Notes { get; init; }
@@ -22,6 +24,6 @@ namespace Entities.Dtos
         public Guid Id { get; init; }
         public string Name { get; init; } = null!;
         public string Color { get; init; } = "#3B82F6";
-        public ICollection<TimeLog> TimeLogs { get; init; } = new List<TimeLog>();
+        public ICollection<TimeLogDto> TimeLogs { get; init; } = new List<TimeLogDto>();
     }
 }

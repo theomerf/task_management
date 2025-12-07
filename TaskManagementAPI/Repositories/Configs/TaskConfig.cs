@@ -34,6 +34,14 @@ namespace Repositories.Configs
             builder.HasIndex(t => t.AssignedToId)
                 .HasFilter("[DeletedAt] IS NULL");
 
+            builder.HasIndex(t => new { t.ProjectId, t.CreatedById })
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => new { t.ProjectId, t.AssignedToId })
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => new { t.ProjectId, t.LabelId })
+                .HasFilter("[DeletedAt] IS NULL");
+            builder.HasIndex(t => new { t.CreatedById, t.Status })
+                .HasFilter("[DeletedAt] IS NULL");
             builder.HasIndex(t => new { t.ProjectId, t.Status })
                 .HasFilter("[DeletedAt] IS NULL");
             builder.HasIndex(t => new { t.ProjectId, t.DueDate })

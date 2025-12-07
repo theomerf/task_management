@@ -22,8 +22,8 @@ namespace Services
         private async Task<long> TaskAuthorizationCheckAsync(string accountId, Guid projectId, string errorMessage, bool isAdmin, bool isManage)
         {
             var (isAuthorized, id) = isManage ?
-                  await _manager.Authorization.CanAccessTasksAsync(accountId, projectId, isAdmin)
-                : await _manager.Authorization.CanManageTasksAsync(accountId, projectId, isAdmin);
+                  await _manager.Authorization.CanManageTasksAsync(accountId, projectId, isAdmin)
+                : await _manager.Authorization.CanAccessTasksAsync(accountId, projectId, isAdmin);
 
             if (!isAuthorized)
                 throw new AccessViolationException(errorMessage);
@@ -40,9 +40,9 @@ namespace Services
             return tasks;
         }
 
-        private async Task<Entities.Models.Task> GetTaskByIdForServiceAsync(long projectId, Guid taskId, bool trackChanges)
+        private async Task<Entities.Models.Task> GetTaskByIdForServiceAsync(long projectId, Guid taskId, bool forDelete, bool trackChanges)
         {
-            var task = await _manager.Task.GetTaskByIdAsync(projectId, taskId, trackChanges);
+            var task = await _manager.Task.GetTaskByIdAsync(projectId, taskId, forDelete, trackChanges);
 
             if (task == null)
                 throw new TaskNotFoundException(taskId);
@@ -53,7 +53,7 @@ namespace Services
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu göreve erişim yetkiniz bulunmamaktadır.", isAdmin, false);
 
-            var task = await GetTaskByIdForServiceAsync(id, taskId, false);
+            var task = await GetTaskByIdForServiceAsync(id, taskId, false, false);
             var taskDto = _mapper.Map<TaskDetailsDto>(task);
 
             return taskDto;
@@ -71,10 +71,51 @@ namespace Services
             {
                 var label = await _manager.Project.GetLabelByIdAsync(id, taskDto.LabelId.Value, false);
 
-                if (label != null)
-                    task.LabelId = label.LabelSequence;
+                if (label == null)
+                    throw new LabelNotFoundException(taskDto.LabelId.Value);
+
+                task.LabelId = label.LabelSequence;
             }
             _manager.Task.CreateTask(task);
+
+            await _manager.SaveAsync();
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedTaskId = task.TaskSequence,
+                RelatedProjectId = id,
+                Type = ActivityType.TaskCreated,
+                Description = $"'{task.Title}' başlıklı görev oluşturuldu.",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            if (task.AssignedToId != null)
+            {
+                var assignedActivityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedTaskId = task.TaskSequence,
+                    RelatedProjectId = id,
+                    Type = ActivityType.TaskAssigned,
+                    Description = $"'{task.Title}' başlıklı görev ilk oluşturmada '{task.AssignedTo!.Email}' kullanıcısına atandı.",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _manager.ActivityLog.CreateActivityLog(assignedActivityLog);
+
+                var notification = new Notification
+                {
+                    RecipientId = taskDto.AssignedToId,
+                    RelatedTaskId = task.TaskSequence,
+                    Title = "Yeni Görev Ataması",
+                    Message = $"'{task.Title}' başlıklı görev size atandı.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _manager.Notification.CreateNotification(notification);
+            }
+
+            _manager.ActivityLog.CreateActivityLog(activityLog);
 
             await _manager.SaveAsync();
         }
@@ -83,7 +124,65 @@ namespace Services
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
 
-            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, true);
+            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, false, true);
+
+            if (task.Status != taskDto.Status)
+            {
+                var statusActivityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedTaskId = task.TaskSequence,
+                    RelatedProjectId = id,
+                    Type = ActivityType.TaskStatusChanged,
+                    Description = $"'{task.Title}' başlıklı görevin durumu güncellendi.",
+                    OldValue = task.Status.ToString(),
+                    NewValue = taskDto.Status.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                };
+                _manager.ActivityLog.CreateActivityLog(statusActivityLog);
+            }
+
+            if (task.Priority != taskDto.Priority)
+            {
+                var priorityActivityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedTaskId = task.TaskSequence,
+                    RelatedProjectId = id,
+                    Type = ActivityType.TaskPriorityChanged,
+                    Description = $"'{task.Title}' başlıklı görevin önceliği güncellendi.",
+                    OldValue = task.Priority.ToString(),
+                    NewValue = taskDto.Priority.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                };
+                _manager.ActivityLog.CreateActivityLog(priorityActivityLog);
+            }
+
+            if (task.AssignedToId != taskDto.AssignedToId)
+            {
+                var assignedActivityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedTaskId = task.TaskSequence,
+                    RelatedProjectId = id,
+                    Type = ActivityType.TaskAssigned,
+                    Description = $"'{task.Title}' başlıklı görev atandı.",
+                    OldValue = task.AssignedToId,
+                    NewValue = taskDto.AssignedToId
+                };
+                _manager.ActivityLog.CreateActivityLog(assignedActivityLog);
+
+                var notification = new Notification
+                {
+                    RecipientId = taskDto.AssignedToId,
+                    RelatedTaskId = task.TaskSequence,
+                    Title = "Yeni Görev Ataması",
+                    Message = $"'{task.Title}' başlıklı görev size atandı.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _manager.Notification.CreateNotification(notification);
+            }
             _mapper.Map(taskDto, task);
             if (taskDto.LabelId != null)
             {
@@ -94,6 +193,17 @@ namespace Services
             }
             task.UpdatedAt = DateTime.UtcNow;
 
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedTaskId = task.TaskSequence,
+                RelatedProjectId = id,
+                Type = ActivityType.TaskUpdated,
+                Description = $"'{task.Title}' başlıklı görev güncellendi.",
+                CreatedAt = DateTime.UtcNow
+            };
+            _manager.ActivityLog.CreateActivityLog(activityLog);
+
             await _manager.SaveAsync();
         }
 
@@ -101,10 +211,52 @@ namespace Services
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
 
-            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, true);
+            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, false, true);
             _mapper.Map(taskDto, task);
 
             task.UpdatedAt = DateTime.UtcNow;
+
+            if (task.Status == Entities.Models.TaskStatus.Done)
+            {
+                var completedActivityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedTaskId = task.TaskSequence,
+                    RelatedProjectId = id,
+                    Type = ActivityType.TaskCompleted,
+                    Description = $"'{task.Title}' başlıklı görev tamamlandı.",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                task.CompletedAt  = DateTime.UtcNow;
+                _manager.ActivityLog.CreateActivityLog(completedActivityLog);
+
+                var notification = new Notification
+                {
+                    RecipientId = task.CreatedById!,
+                    RelatedTaskId = task.TaskSequence,
+                    Title = "Görev Tamamlandı",
+                    Message = $"'{task.Title}' başlıklı görev tamamlandı.",
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                _manager.Notification.CreateNotification(notification);
+            }
+            else
+            {
+                var activityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedTaskId = task.TaskSequence,
+                    RelatedProjectId = id,
+                    Type = ActivityType.TaskStatusChanged,
+                    Description = $"'{task.Title}' başlıklı görevin durumu '{task.Status}' olarak güncellendi.",
+                    OldValue = task.Status.ToString(),
+                    NewValue = taskDto.Status.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                };
+                _manager.ActivityLog.CreateActivityLog(activityLog);
+            }
 
             await _manager.SaveAsync();
         }
@@ -113,10 +265,23 @@ namespace Services
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
 
-            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, true);
+            var task = await GetTaskByIdForServiceAsync(id, taskDto.Id, false, true);
             _mapper.Map(taskDto, task);
 
             task.UpdatedAt = DateTime.UtcNow;
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedTaskId = task.TaskSequence,
+                RelatedProjectId = id,
+                Type = ActivityType.TaskPriorityChanged,
+                Description = $"'{task.Title}' başlıklı görevin önceliği '{task.Priority}' olarak güncellendi.",
+                OldValue = task.Priority.ToString(),
+                NewValue = taskDto.Priority.ToString(),
+                CreatedAt = DateTime.UtcNow
+            };
+            _manager.ActivityLog.CreateActivityLog(activityLog);
 
             await _manager.SaveAsync();
         }
@@ -125,14 +290,37 @@ namespace Services
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev silme yetkiniz bulunmamaktadır.", isAdmin, true);
 
-            var task = await GetTaskByIdForServiceAsync(id, taskId, true);
+            var task = await GetTaskByIdForServiceAsync(id, taskId, true, true);
             task.DeletedAt = DateTime.UtcNow;
-            
+
+            foreach (var timeLog in task.TimeLogs)
+            {
+                timeLog.DeletedAt = DateTime.UtcNow;
+            }
+            foreach (var comment in task.Comments)
+            {
+                comment.DeletedAt = DateTime.UtcNow;
+            }
+            foreach (var attachment in task.Attachments)
+            {
+                attachment.DeletedAt = DateTime.UtcNow;
+            }
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedTaskId = task.TaskSequence,
+                RelatedProjectId = id,
+                Type = ActivityType.TaskDeleted,
+                Description = $"'{task.Title}' başlıklı görev silindi.",
+                CreatedAt = DateTime.UtcNow
+            };
+
             await _manager.SaveAsync();
         }
 
         // Attachment
-        public async Task<IEnumerable<TaskAttachmentDto>> GetTaskAttachmentsAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin)
+        public async Task<IEnumerable<AttachmentDto>> GetTaskAttachmentsAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin)
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev eklerini görme yetkiniz bulunmamaktadır.", isAdmin, false);
             var attachments = await _manager.Task.GetTaskAttachmentsAsync(id, taskId, false);
@@ -140,43 +328,43 @@ namespace Services
             return attachments;
         }
 
-        public async Task<TaskAttachment> GetTaskAttachmentByIdForServiceAsync(long projectId, Guid taskId, Guid attachmentId, bool trackChanges)
+        public async Task<Attachment> GetTaskAttachmentByIdForServiceAsync(long projectId, Guid taskId, Guid attachmentId, bool trackChanges)
         {
             var attachment = await _manager.Task.GetTaskAttachmentByIdAsync(projectId, taskId, attachmentId, trackChanges);
 
             if (attachment == null)
-                throw new TaskAttachmentNotFoundException(attachmentId);
+                throw new AttachmentNotFoundException(attachmentId);
 
             return attachment;
         }
 
-        public async Task<TaskAttachmentDetailsDto> GetTaskAttachmentByIdAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin)
+        public async Task<AttachmentDetailsDto> GetTaskAttachmentByIdAsync(Guid projectId, Guid taskId, Guid attachmentId, string accountId, bool isAdmin)
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu görev ekini görme yetkiniz bulunmamaktadır.", isAdmin, false);
 
             var attachment = await GetTaskAttachmentByIdForServiceAsync(id, taskId, attachmentId, false);
-            var attachmentDto = _mapper.Map<TaskAttachmentDetailsDto>(attachment);
+            var attachmentDto = _mapper.Map<AttachmentDetailsDto>(attachment);
 
             return attachmentDto;
         }
 
-        public async System.Threading.Tasks.Task CreateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForCreation attachmentDto, string accountId, bool isAdmin)
+        public async System.Threading.Tasks.Task CreateTaskAttachmentAsync(Guid projectId, AttachmentDtoForCreation attachmentDto, string accountId, bool isAdmin)
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev eki oluşturma yetkiniz bulunmamaktadır.", isAdmin, true);
-            var taskId = await _manager.Task.GetTaskIdAsync(id, attachmentDto.TaskId);
+            var taskId = await _manager.Task.GetTaskIdAsync(id, attachmentDto.TaskId!.Value);
 
-            var attachment = _mapper.Map<TaskAttachment>(attachmentDto);
+            var attachment = _mapper.Map<Attachment>(attachmentDto);
             attachment.TaskId = taskId;
             _manager.Task.CreateTaskAttachment(attachment);
 
             await _manager.SaveAsync();
         }
 
-        public async System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, TaskAttachmentDtoForUpdate attachmentDto, string accountId, bool isAdmin)
+        public async System.Threading.Tasks.Task UpdateTaskAttachmentAsync(Guid projectId, AttachmentDtoForUpdate attachmentDto, string accountId, bool isAdmin)
         {
             var id = await TaskAuthorizationCheckAsync(accountId, projectId, "Bu projede görev eki düzenleme yetkiniz bulunmamaktadır.", isAdmin, true);
 
-            var attachment = await GetTaskAttachmentByIdForServiceAsync(id, attachmentDto.TaskId, attachmentDto.Id, true);
+            var attachment = await GetTaskAttachmentByIdForServiceAsync(id, attachmentDto.TaskId!.Value, attachmentDto.Id, true);
             _mapper.Map(attachmentDto, attachment);
 
             await _manager.SaveAsync();
@@ -236,6 +424,16 @@ namespace Services
                 timeLog.TimeLogCategoryId = timeLogCategory.TimeLogCategorySequence;
             }
             _manager.Task.CreateTimeLog(timeLog);
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedTaskId = taskId,
+                RelatedProjectId = id,
+                Type = ActivityType.TimeLogAdded,
+                Description = $"Zaman raporu eklendi.",
+                CreatedAt = DateTime.UtcNow
+            };
 
             await _manager.SaveAsync();
         }

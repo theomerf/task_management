@@ -31,7 +31,7 @@ namespace Entities.Models
         public Account? AssignedTo { get; set; }
         public Label? Label { get; set; }
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
-        public ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
+        public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
         public ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
         public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
     }

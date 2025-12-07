@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entities.Dtos
 {
-    public record TaskAttachmentDetailsDto
+    public record AttachmentDetailsDto
     {
         public Guid Id { get; set; }
         public string UploadedByEmail { get; init; } = null!;

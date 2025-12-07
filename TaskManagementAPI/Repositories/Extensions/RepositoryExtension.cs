@@ -64,6 +64,8 @@ namespace Repositories.Extensions
             return query.Where(lambda);
         }
 
+        // Project
+
         public static IQueryable<Project> FilterByRole(this IQueryable<Project> query, string accountId, ProjectMemberRole? role)
         {
             if (role == null)
@@ -72,6 +74,8 @@ namespace Repositories.Extensions
             return query.Where(p => p.Members.Any(m => m.AccountId == accountId && m.Role == role));
         }
 
+        // Task
+
         public static IQueryable<Entities.Models.Task> FilterByMe(this IQueryable<Entities.Models.Task> query, bool? me, string accountId)
         {
             if (me == null)
@@ -79,5 +83,28 @@ namespace Repositories.Extensions
 
             return query.Where(t => t.AssignedToId == accountId);
         }
+
+        // ActivityLog
+
+        public static IQueryable<ActivityLog> FilterByActivityType(this IQueryable<ActivityLog> query, int? activityType)
+        {
+            if (activityType == null)
+                return query;
+
+            if (activityType == 0)
+                return query.Where(query => query.Type >= ActivityType.TaskCreated && query.Type <= ActivityType.TaskDeleted);
+            else if (activityType == 1)
+                return query.Where(query => query.Type >= ActivityType.ProjectCreated && query.Type <= ActivityType.ProjectDeleted);
+            else if (activityType == 2)
+                return query.Where(query => query.Type >= ActivityType.MemberAdded && query.Type <= ActivityType.MemberRoleChanged);
+            else if (activityType == 3)
+                return query.Where(query => query.Type >= ActivityType.CommentAdded && query.Type <= ActivityType.CommentDeleted);
+            else if (activityType == 4)
+                return query.Where(query => query.Type == ActivityType.TimeLogAdded);
+            else
+                return query;
+
+        }
+
     }
 }

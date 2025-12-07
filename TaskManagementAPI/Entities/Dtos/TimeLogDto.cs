@@ -1,7 +1,4 @@
-﻿using Entities.Models;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Entities.Dtos
+﻿namespace Entities.Dtos
 {
     public record TimeLogDto
     {

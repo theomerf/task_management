@@ -18,6 +18,11 @@ namespace Repositories
         public async Task<IEnumerable<TaskDto>> GetProjectTasksAsync(string accountId, long projectId, TaskRequestParameters p, bool trackChanges)
         {
             var tasks = await FindByCondition(t => t.ProjectId == projectId, trackChanges)
+                .Include(t => t.CreatedBy)
+                .Include(t => t.AssignedTo)
+                .Include(t => t.Comments)
+                .Include(t => t.Attachments)
+                .AsSplitQuery()
                 .FilterBy(p.Title, p => p.Title, FilterOperator.Contains)
                 .FilterBy(p.Status, p => p.Status, FilterOperator.Equal)
                 .FilterBy(p.Priority, p => p.Priority, FilterOperator.Equal)
@@ -41,12 +46,37 @@ namespace Repositories
             return tasks;
         }
 
-        public async Task<Entities.Models.Task?> GetTaskByIdAsync(long projectId, Guid taskId, bool trackChanges)
+        public async Task<Entities.Models.Task?> GetTaskByIdAsync(long projectId, Guid taskId, bool forDelete, bool trackChanges)
         {
-            var task = await FindByCondition(t => t.ProjectId == projectId && t.Id == taskId, trackChanges)
+            var taskQuery = FindByCondition(t => t.ProjectId == projectId && t.Id == taskId, trackChanges)
+                .Include(t => t.CreatedBy)
+                .Include(t => t.AssignedTo)
+                .Include(t => t.Label);
+
+            if (forDelete)
+            {
+                var taskForDelete = await taskQuery
+                                .Include(t => t.Comments)
+                                .Include(t => t.Attachments)
+                                .Include(t => t.TimeLogs)
+                                .FirstOrDefaultAsync();
+
+                return taskForDelete;
+            }
+
+            var task = await taskQuery
                 .FirstOrDefaultAsync();
 
             return task;
+        }
+
+        public async Task<long> GetTaskIdAsync(long projectId, Guid taskId)
+        {
+            var taskSequence = await FindByCondition(t => t.ProjectId == projectId && t.Id == taskId, false)
+                .Select(t => t.TaskSequence)
+                .FirstOrDefaultAsync();
+
+            return taskSequence;
         }
 
         public void CreateTask(Entities.Models.Task task)
@@ -61,65 +91,50 @@ namespace Repositories
 
         // Attachment
 
-        public async Task<long> GetTaskIdAsync(long projectId, Guid taskId)
+        public async Task<IEnumerable<AttachmentDto>> GetTaskAttachmentsAsync(long projectId, Guid taskId, bool trackChanges)
         {
-            var id = await FindByCondition(t => t.ProjectId == projectId && t.Id == taskId, false)
-                .Select(t => t.TaskSequence)
-                .FirstOrDefaultAsync();
-
-            return id;
-        }
-
-        public async Task<IEnumerable<TaskAttachmentDto>> GetTaskAttachmentsAsync(long projectId, Guid taskId, bool trackChanges)
-        {
-            var id = await GetTaskIdAsync(projectId, taskId);
-
-            var attachments = await _context.TaskAttachments
-                .Include(ta => ta.UploadedBy)
-                .Where(ta => ta.Task!.ProjectId == projectId && ta.TaskId == id)
+            var attachmentsQuery = _context.Attachments
+                .Where(ta => ta.Task!.ProjectId == projectId && ta.Task.Id == taskId)
                 .OrderBy(ta => ta.AttachmentSequence)
-                .Select(ta => new TaskAttachmentDto
+                .Select(ta => new AttachmentDto
                 {
                     Id = ta.Id,
                     FileUrl = ta.FileUrl,
                     ThumbnailUrl = ta.ThumbnailUrl,
                     UploadedByEmail = ta.UploadedBy!.Email!,
                     UploadedAt = ta.UploadedAt
-                })
+                });
+
+            return await (trackChanges ? attachmentsQuery : attachmentsQuery.AsNoTracking())
                 .ToListAsync();
-
-            return attachments;
         }
 
-        public async Task<TaskAttachment?> GetTaskAttachmentByIdAsync(long projectId, Guid taskId, Guid attachmentId, bool trackChanges)
+        public async Task<Attachment?> GetTaskAttachmentByIdAsync(long projectId, Guid taskId, Guid attachmentId, bool trackChanges)
         {
-            var id = await GetTaskIdAsync(projectId, taskId);
+            var attachmentQuery = _context.Attachments
+                .Include(ta => ta.UploadedBy)
+                .Where(ta => ta.Task!.ProjectId == projectId && ta.Task.Id == taskId && ta.Id == attachmentId);
 
-            var attachment = await _context.TaskAttachments
-                .Where(ta => ta.Task!.ProjectId == projectId && ta.TaskId == id && ta.Id == attachmentId)
+            return await (trackChanges ? attachmentQuery : attachmentQuery.AsNoTracking())
                 .FirstOrDefaultAsync();
-            return attachment;
         }
 
-        public void CreateTaskAttachment(TaskAttachment attachment)
+        public void CreateTaskAttachment(Attachment attachment)
         {
-            _context.TaskAttachments.Add(attachment);
+            _context.Attachments.Add(attachment);
         }
 
-        public void UpdateTaskAttachment(TaskAttachment attachment)
+        public void UpdateTaskAttachment(Attachment attachment)
         {
-            _context.TaskAttachments.Update(attachment);
+            _context.Attachments.Update(attachment);
         }
 
         // TimeLog
 
         public async Task<IEnumerable<TimeLogDto>> GetTaskTimeLogsAsync(long projectId, Guid taskId, bool trackChanges)
         {
-            var id = await GetTaskIdAsync(projectId, taskId);
-
-            var timeLogs = await _context.TimeLogs
-                .Include(tl => tl.LoggedBy)
-                .Where(tl => tl.Task!.ProjectId == projectId && tl.TaskId == id)
+            var timeLogsQuery = _context.TimeLogs
+                .Where(tl => tl.Task!.ProjectId == projectId && tl.Task.Id == taskId)
                 .OrderBy(tl => tl.TimeLogSequence)
                 .Select(tl => new TimeLogDto
                 {
@@ -128,21 +143,21 @@ namespace Repositories
                     TimeLogCategoryName = tl.TimeLogCategory!.Name!,
                     TimeLogCategoryColor = tl.TimeLogCategory!.Color!,
                     Hours = tl.Hours
-                })
-                .ToListAsync();
+                });
 
-            return timeLogs;
+            return await (trackChanges ? timeLogsQuery : timeLogsQuery.AsNoTracking())
+                .ToListAsync();
         }
 
         public async Task<TimeLog?> GetTimeLogByIdAsync(long projectId, Guid taskId, Guid logId, bool trackChanges)
         {
-            var id = await GetTaskIdAsync(projectId, taskId);
+            var timeLogQuery = _context.TimeLogs
+                .Include(tl => tl.LoggedBy)
+                .Include(tl => tl.TimeLogCategory)
+                .Where(tl => tl.Task!.ProjectId == projectId && tl.Task.Id == taskId && tl.Id == logId);
 
-            var timeLog = await _context.TimeLogs
-                .Where(tl => tl.Task!.ProjectId == projectId && tl.TaskId == id && tl.Id == logId)
+            return await (trackChanges ? timeLogQuery : timeLogQuery.AsNoTracking())
                 .FirstOrDefaultAsync();
-
-            return timeLog;
         }
 
         public void CreateTimeLog(TimeLog timeLog)
@@ -159,7 +174,7 @@ namespace Repositories
 
         public async Task<IEnumerable<TimeLogCategoryDto>> GetProjectsTimeLogCategoriesAsync(long projectId, bool trackChanges)
         {
-            var categories = await _context.TimeLogCategories
+            var categoriesQuery = _context.TimeLogCategories
                 .Where(tlc => tlc.ProjectId == projectId)
                 .OrderBy(tlc => tlc.TimeLogCategorySequence)
                 .Select(tlc => new TimeLogCategoryDto
@@ -167,19 +182,21 @@ namespace Repositories
                     Id = tlc.Id,
                     Name = tlc.Name,
                     Color = tlc.Color
-                })
-                .ToListAsync();
+                });
 
-            return categories;
+            return await (trackChanges ? categoriesQuery : categoriesQuery.AsNoTracking())
+                .ToListAsync();
         }
 
         public async Task<TimeLogCategory?> GetTimeLogCategoryByIdAsync(long projectId, Guid categoryId, bool trackChanges)
         {
-            var category = await _context.TimeLogCategories
-                .Where(tlc => tlc.ProjectId == projectId && tlc.Id == categoryId)
-                .FirstOrDefaultAsync();
+            var categoryQuery = _context.TimeLogCategories
+                .Include(tlc => tlc.TimeLogs)
+                    .ThenInclude(tl => tl.LoggedBy)
+                .Where(tlc => tlc.ProjectId == projectId && tlc.Id == categoryId);
 
-            return category;
+            return await (trackChanges ? categoryQuery : categoryQuery.AsNoTracking())
+                .FirstOrDefaultAsync();
         }
 
         public void CreateTimeLogCategory(TimeLogCategory timeLogCategory)

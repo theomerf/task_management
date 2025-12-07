@@ -21,7 +21,7 @@ namespace Entities.Models
         public Account? Author { get; set; }
         public Comment? ParentComment { get; set; }
         public ICollection<Comment> Replies { get; set; } = new List<Comment>();
-        public ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
+        public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
         public ICollection<Mention> Mentions { get; set; } = new List<Mention>();
     }
 }

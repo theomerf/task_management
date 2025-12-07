@@ -105,7 +105,7 @@ namespace Presentation.Controllers
 
         [HttpPost("attachment/create")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        public async Task<IActionResult> CreateTaskAttachment([FromRoute] Guid projectId, [FromBody] TaskAttachmentDtoForCreation attachmentDto)
+        public async Task<IActionResult> CreateTaskAttachment([FromRoute] Guid projectId, [FromBody] AttachmentDtoForCreation attachmentDto)
         {
             await _manager.TaskService.CreateTaskAttachmentAsync(projectId, attachmentDto, UserId!, IsAdmin);
 
@@ -114,7 +114,7 @@ namespace Presentation.Controllers
 
         [HttpPut("attachment/update")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        public async Task<IActionResult> UpdateTaskAttachment([FromRoute] Guid projectId, [FromBody] TaskAttachmentDtoForUpdate attachmentDto)
+        public async Task<IActionResult> UpdateTaskAttachment([FromRoute] Guid projectId, [FromBody] AttachmentDtoForUpdate attachmentDto)
         {
             await _manager.TaskService.UpdateTaskAttachmentAsync(projectId, attachmentDto, UserId!, IsAdmin);
 
@@ -176,6 +176,7 @@ namespace Presentation.Controllers
         // TimeLogCategory
 
         [HttpGet("timelog-category")]
+        [ResponseCache(Duration = 300)]
         public async Task<IActionResult> GetProjectTimeLogCategories([FromRoute] Guid projectId)
         {
             var categories = await _manager.TaskService.GetProjectsTimeLogCategoriesAsync(projectId, UserId!, IsAdmin);

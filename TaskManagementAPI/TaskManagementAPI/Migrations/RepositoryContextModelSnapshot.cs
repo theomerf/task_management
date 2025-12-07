@@ -185,6 +185,74 @@ namespace TaskManagementAPI.Migrations
                     b.ToTable("ActivityLogs");
                 });
 
+            modelBuilder.Entity("Entities.Models.Attachment", b =>
+                {
+                    b.Property<long>("AttachmentSequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AttachmentSequence"));
+
+                    b.Property<long?>("CommentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedById")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("AttachmentSequence");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("Id")
+                        .IsUnique()
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
+
+                    b.HasIndex("TaskId")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("UploadedById");
+
+                    b.ToTable("Attachments");
+                });
+
             modelBuilder.Entity("Entities.Models.Comment", b =>
                 {
                     b.Property<long>("CommentSequence")
@@ -653,8 +721,6 @@ namespace TaskManagementAPI.Migrations
                     b.HasIndex("AssignedToId")
                         .HasFilter("[DeletedAt] IS NULL");
 
-                    b.HasIndex("CreatedById");
-
                     b.HasIndex("DueDate")
                         .HasFilter("[DeletedAt] IS NULL");
 
@@ -678,81 +744,25 @@ namespace TaskManagementAPI.Migrations
                     b.HasIndex("AssignedToId", "Status")
                         .HasFilter("[DeletedAt] IS NULL");
 
+                    b.HasIndex("CreatedById", "Status")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("ProjectId", "AssignedToId")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("ProjectId", "CreatedById")
+                        .HasFilter("[DeletedAt] IS NULL");
+
                     b.HasIndex("ProjectId", "DueDate")
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.HasIndex("ProjectId", "LabelId")
                         .HasFilter("[DeletedAt] IS NULL");
 
                     b.HasIndex("ProjectId", "Status")
                         .HasFilter("[DeletedAt] IS NULL");
 
                     b.ToTable("Tasks");
-                });
-
-            modelBuilder.Entity("Entities.Models.TaskAttachment", b =>
-                {
-                    b.Property<long>("AttachmentSequence")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AttachmentSequence"));
-
-                    b.Property<long?>("CommentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWSEQUENTIALID()");
-
-                    b.Property<long>("TaskId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UploadedById")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("AttachmentSequence");
-
-                    b.HasIndex("CommentId");
-
-                    b.HasIndex("Id")
-                        .IsUnique()
-                        .HasFilter("[DeletedAt] IS NULL");
-
-                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Id"), false);
-
-                    b.HasIndex("TaskId")
-                        .HasFilter("[DeletedAt] IS NULL");
-
-                    b.HasIndex("UploadedById");
-
-                    b.ToTable("TaskAttachments");
                 });
 
             modelBuilder.Entity("Entities.Models.TimeLog", b =>
@@ -1039,6 +1049,31 @@ namespace TaskManagementAPI.Migrations
                     b.Navigation("RelatedTask");
                 });
 
+            modelBuilder.Entity("Entities.Models.Attachment", b =>
+                {
+                    b.HasOne("Entities.Models.Comment", "Comment")
+                        .WithMany("Attachments")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Entities.Models.Task", "Task")
+                        .WithMany("Attachments")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.Account", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Task");
+
+                    b.Navigation("UploadedBy");
+                });
+
             modelBuilder.Entity("Entities.Models.Comment", b =>
                 {
                     b.HasOne("Entities.Models.Account", "Author")
@@ -1191,31 +1226,6 @@ namespace TaskManagementAPI.Migrations
                     b.Navigation("Label");
 
                     b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("Entities.Models.TaskAttachment", b =>
-                {
-                    b.HasOne("Entities.Models.Comment", "Comment")
-                        .WithMany("Attachments")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("Entities.Models.Task", "Task")
-                        .WithMany("Attachments")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.Account", "UploadedBy")
-                        .WithMany()
-                        .HasForeignKey("UploadedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("Task");
-
-                    b.Navigation("UploadedBy");
                 });
 
             modelBuilder.Entity("Entities.Models.TimeLog", b =>

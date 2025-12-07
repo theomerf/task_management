@@ -2,12 +2,10 @@
 
 namespace Entities.Dtos
 {
-    public record TaskAttachmentDtoForUpdate
+    public record AttachmentDtoForCreation
     {
-        [Required(ErrorMessage = "Id alanı gereklidir.")]
-        public Guid Id { get; set; }
-        [Required(ErrorMessage = "Görev id alanı gereklidir.")]
-        public Guid TaskId { get; set; }
+        public Guid? TaskId { get; init; }
+        public string? UploadedById { get; init; }
         [MinLength(1, ErrorMessage = "Dosya adı en az 1 karakter olmalıdır.")]
         [MaxLength(255, ErrorMessage = "Dosya adı en fazla 255 karakter olabilir.")]
         public string? FileName { get; init; }

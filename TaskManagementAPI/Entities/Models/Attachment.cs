@@ -2,7 +2,7 @@
 
 namespace Entities.Models
 {
-    public class TaskAttachment
+    public class Attachment
     {
         public Guid Id { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -3,6 +3,7 @@ using Entities.Dtos;
 using Entities.Exceptions;
 using Entities.Models;
 using Entities.RequestFeatures;
+using Microsoft.AspNetCore.Identity;
 using Repositories.Contracts;
 using Services.Contracts;
 
@@ -12,11 +13,13 @@ namespace Services
     {
         private readonly IRepositoryManager _manager;
         private readonly IMapper _mapper;
+        private readonly UserManager<Account> _userManager;
 
-        public ProjectManager(IRepositoryManager manager, IMapper mapper)
+        public ProjectManager(IRepositoryManager manager, IMapper mapper, UserManager<Account> userManager)
         {
             _manager = manager;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
         // Project
@@ -36,9 +39,9 @@ namespace Services
             return projects;
         }
 
-        private async Task<Project> GetProjectByIdForServiceAsync(Guid projectId, bool trackChanges)
+        private async Task<Project> GetProjectByIdForServiceAsync(Guid projectId, bool forDelete, bool trackChanges)
         {
-            var project = await _manager.Project.GetProjectByIdAsync(projectId, trackChanges);
+            var project = await _manager.Project.GetProjectByIdAsync(projectId, forDelete, trackChanges);
 
             if (project == null)
                 throw new ProjectNotFoundException(projectId);
@@ -48,7 +51,7 @@ namespace Services
 
         public async Task<ProjectDetailsDto> GetProjectByIdAsync(Guid projectId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (isAdmin != true)
             {
@@ -65,23 +68,31 @@ namespace Services
 
         public async System.Threading.Tasks.Task CreateProjectAsync(ProjectDtoForCreation projectDto, string accountId, bool canCreate)
         {
-            if (canCreate)
-            {
-                var project = _mapper.Map<Project>(projectDto);
-                project.CreatedById = accountId;
-                _manager.Project.CreateProject(project);
-
-                await _manager.SaveAsync();
-            }
-            else
-            {
+            if (!canCreate)
                 throw new AccessViolationException("Yeni proje oluşturma izniniz yok.");
-            }
+
+            var project = _mapper.Map<Project>(projectDto);
+            project.CreatedById = accountId;
+            _manager.Project.CreateProject(project);
+
+            await _manager.SaveAsync();
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedProjectId = project.ProjectSequence,
+                Type = ActivityType.ProjectCreated,
+                Description = "Proje oluşturuldu.",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _manager.ActivityLog.CreateActivityLog(activityLog);
+            await _manager.SaveAsync();
         }
 
         public async System.Threading.Tasks.Task DeleteProjectAsync(Guid projectId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, true);
+            var project = await GetProjectByIdForServiceAsync(projectId, true, true);
 
             if (!isAdmin)
             {
@@ -94,6 +105,34 @@ namespace Services
             }
 
             project.DeletedAt = DateTime.UtcNow;
+            var tasks = project.Tasks;
+            foreach (var task in tasks)
+            {
+                task.DeletedAt = DateTime.UtcNow;
+                foreach (var timeLog in task.TimeLogs)
+                {
+                    timeLog.DeletedAt = DateTime.UtcNow;
+                }
+                foreach (var comment in task.Comments)
+                {
+                    comment.DeletedAt = DateTime.UtcNow;
+                }
+                foreach (var attachment in task.Attachments)
+                {
+                    attachment.DeletedAt = DateTime.UtcNow;
+                }
+            }
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedProjectId = project.ProjectSequence,
+                Type = ActivityType.ProjectDeleted,
+                Description = "Proje silindi.",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _manager.ActivityLog.CreateActivityLog(activityLog);
 
             await _manager.SaveAsync();
         }
@@ -106,13 +145,40 @@ namespace Services
                 throw new ProjectNotFoundException(projectId);
 
             project.DeletedAt = null;
+            var tasks = project.Tasks;
+            foreach (var task in tasks)
+            {
+                task.DeletedAt = null;
+                foreach (var timeLog in task.TimeLogs)
+                {
+                    timeLog.DeletedAt = null;
+                }
+                foreach (var comment in task.Comments)
+                {
+                    comment.DeletedAt = null;
+                }
+                foreach (var attachment in task.Attachments)
+                {
+                    attachment.DeletedAt = null;
+                }
+            }
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = null,
+                RelatedProjectId = project.ProjectSequence,
+                Type = ActivityType.ProjectRestored,
+                Description = "Proje geri yüklendi.",
+                CreatedAt = DateTime.UtcNow
+            };
+            _manager.ActivityLog.CreateActivityLog(activityLog);
 
             await _manager.SaveAsync();
         }
 
         public async System.Threading.Tasks.Task UpdateProjectAsync(ProjectDtoForUpdate projectDto, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectDto.Id, true);
+            var project = await GetProjectByIdForServiceAsync(projectDto.Id, false, true);
 
             if (!isAdmin)
             {
@@ -122,10 +188,51 @@ namespace Services
                     throw new AccessViolationException("Bu projeyi düzenleme izniniz yok.");
             }
 
+            if (project.Status != projectDto.Status)
+            {
+                if (projectDto.Status == ProjectStatus.Completed)
+                {
+                    var completedActivityLog = new ActivityLog
+                    {
+                        PerformedById = accountId,
+                        RelatedProjectId = project.ProjectSequence,
+                        Type = ActivityType.ProjectCompleted,
+                        Description = "Proje tamamlandı.",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _manager.ActivityLog.CreateActivityLog(completedActivityLog);
+                }
+                else if (projectDto.Status == ProjectStatus.Archived)
+                {
+                    var archivedActivityLog = new ActivityLog
+                    {
+                        PerformedById = accountId,
+                        RelatedProjectId = project.ProjectSequence,
+                        Type = ActivityType.ProjectArchived,
+                        Description = "Proje arşivlendi.",
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _manager.ActivityLog.CreateActivityLog(archivedActivityLog);
+                }
+            }
+
             _mapper.Map(projectDto, project);
             project.CreatedById = accountId;
             project.UpdatedAt = DateTime.UtcNow;
             project.Settings.ProjectId = project.ProjectSequence;
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedProjectId = project.ProjectSequence,
+                Type = ActivityType.ProjectUpdated,
+                Description = "Proje güncellendi.",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _manager.ActivityLog.CreateActivityLog(activityLog);
 
             await _manager.SaveAsync();
         }
@@ -142,7 +249,7 @@ namespace Services
         }
         public async Task<ProjectSettingDto> GetProjectSettingsAsync(Guid projectId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -159,7 +266,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task UpdateProjectSettingsAsync(Guid projectId, ProjectSettingDtoForUpdate settingsDto, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -179,7 +286,7 @@ namespace Services
         // Label
         public async Task<IEnumerable<LabelDto>> GetProjectLabelsAsync(Guid projectId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -207,7 +314,7 @@ namespace Services
 
         public async Task<LabelDto> GetLabelByIdAsync(Guid projectId, Guid labelId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -225,7 +332,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task CreateLabelAsync(Guid projectId, LabelDtoForCreation labelDto, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -245,7 +352,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task UpdateLabelAsync(Guid projectId, LabelDtoForUpdate labelDto, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -264,7 +371,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task DeleteLabelAsync(Guid projectId, Guid labelId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -283,7 +390,7 @@ namespace Services
         // Member
         public async Task<IEnumerable<ProjectMemberDto>> GetProjectMembersAsync(Guid projectId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -311,7 +418,7 @@ namespace Services
 
         public async Task<ProjectMemberDto> GetProjectMemberByIdAsync(Guid projectId, Guid memberId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -328,7 +435,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task AddMemberAsync(Guid projectId, ProjectMemberDtoForCreation memberDto, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, false);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, false);
 
             if (!isAdmin)
             {
@@ -352,9 +459,33 @@ namespace Services
                 return;
             }
 
+            var account = await _userManager.FindByIdAsync(memberDto.AccountId!);
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedProjectId = project.ProjectSequence,
+                Type = ActivityType.MemberAdded,
+                Description = $"Proje üyesi eklendi: {account!.Email}",
+                CreatedAt = DateTime.UtcNow
+            };
+            _manager.ActivityLog.CreateActivityLog(activityLog);
+
+            var notification = new Notification
+            {
+                RecipientId = memberDto.AccountId!,
+                InitiatorId = accountId,
+                RelatedProjectId = project.ProjectSequence,
+                Type = NotificationType.ProjectInvitation,
+                Title = "Projeye davet edildiniz",
+                Message = $"'{project.Name}' projesine üye daveti aldınız.",
+                CreatedAt = DateTime.UtcNow
+            };
+            _manager.Notification.CreateNotification(notification);
+
             var member = _mapper.Map<ProjectMember>(memberDto);
             member.ProjectId = project.ProjectSequence;
-            member.AccountId = accountId;
+            member.AccountId = memberDto.AccountId;
             _manager.Project.CreateProjectMember(member);
 
             await _manager.SaveAsync();
@@ -362,7 +493,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task UpdateMemberAsync(Guid projectId, ProjectMemberDtoForUpdate memberDto, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, true);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, true);
 
             if (!isAdmin)
             {
@@ -373,6 +504,24 @@ namespace Services
             }
 
             var member = await GetProjectMemberByIdForServiceAsync(project.ProjectSequence, memberDto.Id, true);
+
+            if (memberDto.Role != memberDto.Role)
+            {
+                var account = await _userManager.FindByIdAsync(member.AccountId!);
+                var activityLog = new ActivityLog
+                {
+                    PerformedById = accountId,
+                    RelatedProjectId = project.ProjectSequence,
+                    Type = ActivityType.MemberRoleChanged,
+                    Description = $"Proje üyesi rolü güncellendi: {account!.Email}",
+                    OldValue = member.Role.ToString(),
+                    NewValue = memberDto.Role.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _manager.ActivityLog.CreateActivityLog(activityLog);
+            }
+
             _mapper.Map(memberDto, member);
 
             await _manager.SaveAsync();
@@ -380,7 +529,7 @@ namespace Services
 
         public async System.Threading.Tasks.Task RemoveMemberAsync(Guid projectId, Guid memberId, string accountId, bool isAdmin)
         {
-            var project = await GetProjectByIdForServiceAsync(projectId, true);
+            var project = await GetProjectByIdForServiceAsync(projectId, false, true);
 
             if (!isAdmin)
             {
@@ -392,6 +541,18 @@ namespace Services
 
             var member = await GetProjectMemberByIdForServiceAsync(project.ProjectSequence, memberId, true);
             member.LeftAt = DateTime.UtcNow;
+
+            var account = await _userManager.FindByIdAsync(member.AccountId!);
+
+            var activityLog = new ActivityLog
+            {
+                PerformedById = accountId,
+                RelatedProjectId = project.ProjectSequence,
+                Type = ActivityType.MemberRemoved,
+                Description = $"Proje üyesi kaldırıldı: {account!.Email}",
+                CreatedAt = DateTime.UtcNow
+            };
+            _manager.ActivityLog.CreateActivityLog(activityLog);
 
             await _manager.SaveAsync();
         }

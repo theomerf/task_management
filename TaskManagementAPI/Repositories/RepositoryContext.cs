@@ -17,7 +17,7 @@ namespace Repositories
         public DbSet<ProjectMember> ProjectMembers { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Label> Labels { get; set; }
-        public DbSet<TaskAttachment> TaskAttachments { get; set; }
+        public DbSet<Attachment> Attachments { get; set; }
         public DbSet<TimeLog> TimeLogs { get; set; }
         public DbSet<TimeLogCategory> TimeLogCategories { get; set; }
         public DbSet<Mention> Mentions { get; set; }

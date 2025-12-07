@@ -25,7 +25,7 @@ namespace Repositories.Configs
 
             builder.HasIndex(pm => new { pm.AccountId, pm.Role });
 
-            builder.HasQueryFilter(pm => pm.Account!.DeletedAt == null);
+            builder.HasQueryFilter(pm => pm.Account!.DeletedAt == null && pm.LeftAt == null);
 
             builder.HasOne(pm => pm.Project)
                 .WithMany(p => p.Members)
