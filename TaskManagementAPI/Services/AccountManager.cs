@@ -40,7 +40,7 @@ namespace Services
         public async Task<IdentityResult> RegisterUserAsync(AccountDtoForRegistration accountDto)
         {
             var user = _mapper.Map<Account>(accountDto);
-            accountDto.Roles?.Add("User");
+            accountDto.Roles?.Add("Member");
 
             if (accountDto.Roles != null && accountDto.Password != null)
             {

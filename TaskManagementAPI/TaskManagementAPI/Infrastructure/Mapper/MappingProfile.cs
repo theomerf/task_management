@@ -8,6 +8,7 @@ namespace TaskManagementAPI.Infrastructure.Mapper
     {
         public MappingProfile()
         {
+            CreateMap<AccountDtoForRegistration, Account>();   
             CreateMap<Project, ProjectDetailsDto>();
             var projectCreationMap = CreateMap<ProjectDtoForCreation, Project>();
                 projectCreationMap.ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

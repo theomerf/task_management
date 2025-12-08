@@ -21,6 +21,6 @@ namespace Entities.Dtos
         public string Email { get; init; } = null!;
         [Required(ErrorMessage = "Telefon numarası gereklidir.")]
         public string PhoneNumber { get; init; } = null!;
-        public ICollection<string> Roles { get; init; } = ["Member"];
+        public ICollection<string>? Roles { get; init; }  = new List<string>();
     }
 }

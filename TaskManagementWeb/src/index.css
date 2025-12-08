@@ -1,3 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  --bg: 246 247 250; /* Light */
+  --text: 11 18 32;
+  --div: 255 255 255;
+  --border: 11 18 32;
+  --btn-primary: 0 0 0;
+  --btn-primary-hover: 30 41 57;
+  --btn-secondary: 255 255 255;
+  --btn-secondary-hover: 240 230 230;
+}
+
+.dark {
+  --bg: 11 15 23; /* Dark */
+  --text: 230 238 247;
+  --div: 7 12 18;
+  --border: 255 255 255;
+  --btn-primary: 255 255 255;
+  --btn-primary-hover: 240 230 230;
+  --btn-secondary: 0 0 0;
+  --btn-secondary-hover: 30 41 57;
+}
+
+body {
+    @apply bg-[rgb(var(--bg))] text-[rgb(var(--text))];
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
