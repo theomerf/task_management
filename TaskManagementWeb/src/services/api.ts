@@ -23,7 +23,7 @@ class TokenRefreshManager {
         this.failedQueue.forEach((promise) => {
             error ? promise.reject(error) : promise.resolve(token);
         });
-        
+
         this.failedQueue = [];
         this.isRefreshing = false;
     }
@@ -103,7 +103,7 @@ const methods = {
     getWithoutHeaders: (url: string, params?: any, signal?: AbortSignal) => axios.get(url, { ...params, signal }).then((response) => response.data),
     post: (url: string, body: any | null, config?: any | null) => axios.post(url, body, config).then((response) => response.data),
     put: (url: string, body: any, config?: any | null) => axios.put(url, body, config).then((response) => response.data),
-    patch: (url: string, body: any, config?: any | null) => axios.patch(url, body, config).then((response) => response.data),
+    patch: (url: string, body?: any, config?: any | null) => axios.patch(url, body, config).then((response) => response.data),
     delete: (url: string) => axios.delete(url).then((response) => response.data),
 };
 
@@ -113,6 +113,28 @@ const account = {
     refresh: () => methods.post("account/refresh", null, { headers: { "X-No-Retry": "true" } }),
     logout: () => methods.post("account/logout", null),
     checkAuth: (signal?: AbortSignal) => methods.getWithoutHeaders("account/check-auth", {}, signal),
+};
+
+const project = {
+    getAll: (params: any, signal?: AbortSignal) => methods.get("project", params, signal),
+    getOne: (id: string, signal?: AbortSignal) => methods.getWithoutHeaders(`project/${id}`, {}, signal),
+    me: (signal?: AbortSignal) => methods.getWithoutHeaders("project/me", {}, signal),
+    create: (formData: any) => methods.post("project/create", formData),
+    update: (formData: any) => methods.put(`project/update`, formData),
+    delete: (id: string) => methods.delete(`project/delete/${id}`),
+    restore: (id: string) => methods.patch(`project/restore/${id}`),
+    getSettings: (projectId: string, signal?: AbortSignal) => methods.getWithoutHeaders(`project/${projectId}/settings`, {}, signal),
+    updateSettings: (projectId: string, formData: any) => methods.put(`project/${projectId}/settings/update`, formData),
+    getLabels: (projectId: string, signal?: AbortSignal) => methods.getWithoutHeaders(`project/${projectId}/labels`, {}, signal),
+    getOneLabel: (projectId: string, labelId: string, signal?: AbortSignal) => methods.getWithoutHeaders(`project/${projectId}/labels/${labelId}`, {}, signal),
+    createLabel: (projectId: string, formData: any) => methods.post(`project/${projectId}/labels/create`, formData),
+    updateLabel: (projectId: string, formData: any) => methods.put(`project/${projectId}/labels/update`, formData),
+    deleteLabel: (projectId: string, labelId: string) => methods.delete(`project/${projectId}/labels/delete/${labelId}`),
+    getMembers: (projectId: string, signal?: AbortSignal) => methods.getWithoutHeaders(`project/${projectId}/members`, {}, signal),
+    getOneMember: (projectId: string, memberId: string, signal?: AbortSignal) => methods.getWithoutHeaders(`project/${projectId}/members/${memberId}`, {}, signal),
+    addMember: (projectId: string, formData: any) => methods.post(`project/${projectId}/members/add`, formData),
+    updateMember: (projectId: string, formData: any) => methods.put(`project/${projectId}/members/update`, formData),
+    removeMember: (projectId: string, memberId: string) => methods.delete(`project/${projectId}/members/remove/${memberId}`),
 };
 
 const errors = {
@@ -125,6 +147,7 @@ const errors = {
 
 const requests = {
     account,
+    project,
     errors,
 };
 

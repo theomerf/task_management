@@ -9,6 +9,10 @@ import { useDispatch } from 'react-redux'
 import { checkAuth, setPreferences, setUser } from './pages/Account/accountSlice'
 import Register from './pages/Account/Register'
 import AccountLayout from './components/layout/AccountLayout'
+import MainLayout from './components/layout/MainLayout'
+import Home from './pages/Home/Home'
+import Projects from './pages/Projects/Projects'
+import Tasks from './pages/Tasks/Tasks'
 
 function App() {
   const dispatch: AppDispatch = useDispatch();
@@ -17,8 +21,10 @@ function App() {
   useEffect(() => {
     if (preferences.darkMode) {
       document.documentElement.classList.toggle("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
-  }, [preferences]);
+  }, [preferences.darkMode]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -35,7 +41,7 @@ function App() {
       try {
         const parsedUser = JSON.parse(storedUser);
         dispatch(setUser(parsedUser));
-        /*dispatch(checkAuth());*/
+        dispatch(checkAuth());
       } catch (error) {
         console.error("Kullanıcı verisi çözümlenirken hata oluştu:", error);
       }
@@ -50,6 +56,11 @@ function App() {
           <Route path="/register" element={<Register />} />
         </Route>
         <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/tasks" element={<Tasks />} />
+          </Route>
         </Route>
       </Routes>
     </HistoryRouter>

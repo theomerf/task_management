@@ -1,5 +1,5 @@
 export interface LoginResponse {
-    userName: string;
+    email: string;
     firstName: string;
     lastName: string;
     avatarUrl?: string;
