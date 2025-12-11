@@ -37,7 +37,7 @@ namespace Services
             var notification = await GetNotificationByIdForServiceAsync(notificationId, true);
             
             if (notification.RecipientId != userId)
-                throw new AccessViolationException("Bu bildirim üzerinde işlem yapma yetkiniz yok.");
+                throw new ForbiddenException("Bu bildirim üzerinde işlem yapma yetkiniz yok.");
 
             notification.ReadAt = DateTime.UtcNow;
 
@@ -49,7 +49,7 @@ namespace Services
             var notification = await GetNotificationByIdForServiceAsync(notificationId, true);
 
             if (notification.RecipientId != userId)
-                throw new AccessViolationException("Bu bildirim üzerinde işlem yapma yetkiniz yok.");
+                throw new ForbiddenException("Bu bildirim üzerinde işlem yapma yetkiniz yok.");
 
             notification.IsArchived = true;
 

@@ -1,10 +1,11 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { toast } from 'react-toastify'
 import { history } from '../../utils/history';
-import type { LoginResponse } from '../../types/loginResponse'; 
-import type { UserPreferences } from '../../types/account'; 
+import type { LoginResponse } from '../../types/loginResponse';
+import type { UserPreferences } from '../../types/account';
 import type { ApiErrorResponse, FormError } from '../../types/apiError';
 import requests from '../../services/api';
+import { queryClient } from '../../services/queryClient';
 
 type userState = {
     user: LoginResponse | null;
@@ -89,6 +90,9 @@ export const logout = createAsyncThunk(
     async (_) => {
         try {
             await requests.account.logout();
+            queryClient.clear();
+            queryClient.removeQueries();
+            queryClient.invalidateQueries();
             localStorage.removeItem("user");
             toast.success("Başarıyla çıkış yaptınız.");
         } catch (error: any) {
@@ -169,6 +173,7 @@ export const accountSlice = createSlice({
         });
         builder.addCase(logout.rejected, (state) => {
             state.user = null;
+            localStorage.removeItem("user");
             state.status = 'idle';
         });
     }

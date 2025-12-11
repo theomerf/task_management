@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Entities.Dtos;
+using Entities.Exceptions;
 using Entities.RequestFeatures;
 using Repositories.Contracts;
 using Services.Contracts;
@@ -22,7 +23,7 @@ namespace Services
             var canAccess = await _manager.Authorization.CanAccessActivityLogsAsync(accountId, projectId, isAdmin);
 
             if (!canAccess.isAuthorized)
-                throw new AccessViolationException("Bu projenin etkinlik günlüklerine erişim izniniz yok.");
+                throw new ForbiddenException("Bu projenin etkinlik günlüklerine erişim izniniz yok.");
 
             long? taskSequence = null;
 

@@ -28,6 +28,8 @@ namespace Entities.Models
         TaskPriorityChanged = 3,
         TaskAssigned = 4,
         TaskCompleted = 5,
+        TaskLabelChanged = 6,
+        TaskReopened = 7,
         TaskDeleted = 9,
 
         ProjectCreated = 10,

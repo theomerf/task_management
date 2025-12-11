@@ -8,6 +8,7 @@ namespace Entities.Dtos
         public string CreatedByEmail { get; init; } = null!;
         public string AssignedToEmail { get; init; } = null!;
         public string Title { get; init; } = null!;
+        public Guid LabelId { get; init; }
         public Entities.Models.TaskStatus Status { get; init; }
         public TaskPriority Priority { get; init; }
         public int ProgressPercentage { get; init; }

@@ -58,7 +58,7 @@ namespace Services
                 bool canAccess = await _manager.Authorization.CanAccessProjectAsync(accountId!, project);
 
                 if (!canAccess)
-                    throw new AccessViolationException("Bu projeye erişim izniniz yok.");
+                    throw new ForbiddenException("Bu projeye erişim izniniz yok.");
             }
 
             var projectDto = _mapper.Map<ProjectDetailsDto>(project);
@@ -69,7 +69,7 @@ namespace Services
         public async System.Threading.Tasks.Task CreateProjectAsync(ProjectDtoForCreation projectDto, string accountId, bool canCreate)
         {
             if (!canCreate)
-                throw new AccessViolationException("Yeni proje oluşturma izniniz yok.");
+                throw new ForbiddenException("Yeni proje oluşturma izniniz yok.");
 
             var project = _mapper.Map<Project>(projectDto);
             project.CreatedById = accountId;
@@ -100,7 +100,7 @@ namespace Services
 
                 if (!canDelete)
                 {
-                    throw new AccessViolationException("Bu projeyi silme izniniz yok.");
+                    throw new ForbiddenException("Bu projeyi silme izniniz yok.");
                 }
             }
 
@@ -185,7 +185,7 @@ namespace Services
                 var canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu projeyi düzenleme izniniz yok.");
+                    throw new ForbiddenException("Bu projeyi düzenleme izniniz yok.");
             }
 
             if (project.Status != projectDto.Status)
@@ -255,7 +255,7 @@ namespace Services
             {
                 bool canAccess = await _manager.Authorization.CanAccessProjectAsync(accountId!, project);
                 if (!canAccess)
-                    throw new AccessViolationException("Bu proje ayarlarına erişim izniniz yok.");
+                    throw new ForbiddenException("Bu proje ayarlarına erişim izniniz yok.");
             }
 
             var settings = await GetProjectSettingsByIdForServiceAsync(project.ProjectSequence, projectId, false);
@@ -272,7 +272,7 @@ namespace Services
             {
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
                 if (!canManage)
-                    throw new AccessViolationException("Bu proje ayarlarını düzenleme izniniz yok.");
+                    throw new ForbiddenException("Bu proje ayarlarını düzenleme izniniz yok.");
             }
 
             var settings = await GetProjectSettingsByIdForServiceAsync(project.ProjectSequence, settingsDto.Id, true);
@@ -293,7 +293,7 @@ namespace Services
                 bool canAccess = await _manager.Authorization.CanAccessProjectAsync(accountId!, project);
 
                 if (!canAccess)
-                    throw new AccessViolationException("Bu projeye erişim izniniz yok.");
+                    throw new ForbiddenException("Bu projeye erişim izniniz yok.");
             }
 
             var labels = await _manager.Project.GetProjectLabelsAsync(project.ProjectSequence, false);
@@ -321,7 +321,7 @@ namespace Services
                 bool canAccess = await _manager.Authorization.CanAccessProjectAsync(accountId!, project);
 
                 if (!canAccess)
-                    throw new AccessViolationException("Bu proje etiketlerine erişim izniniz yok.");
+                    throw new ForbiddenException("Bu proje etiketlerine erişim izniniz yok.");
             }
 
             var label = await GetLabelByIdForServiceAsync(project.ProjectSequence, labelId, false);
@@ -339,7 +339,7 @@ namespace Services
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu projede etiket oluşturma izniniz yok.");
+                    throw new ForbiddenException("Bu projede etiket oluşturma izniniz yok.");
             }
 
             var label = _mapper.Map<Label>(labelDto);
@@ -359,7 +359,7 @@ namespace Services
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu projede etiket düzenleme izniniz yok.");
+                    throw new ForbiddenException("Bu projede etiket düzenleme izniniz yok.");
             }
 
             var label = await GetLabelByIdForServiceAsync(project.ProjectSequence, labelDto.Id, true);
@@ -378,7 +378,7 @@ namespace Services
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu projede etiket silme izniniz yok.");
+                    throw new ForbiddenException("Bu projede etiket silme izniniz yok.");
             }
 
             var label = await GetLabelByIdForServiceAsync(project.ProjectSequence, labelId, true);
@@ -397,7 +397,7 @@ namespace Services
                 bool canAccess = await _manager.Authorization.CanAccessProjectAsync(accountId!, project);
 
                 if (!canAccess)
-                    throw new AccessViolationException("Bu proje üyelerine erişim izniniz yok.");
+                    throw new ForbiddenException("Bu proje üyelerine erişim izniniz yok.");
             }
 
             var members = await _manager.Project.GetProjectMembersAsync(project.ProjectSequence, false);
@@ -424,7 +424,7 @@ namespace Services
             {
                 bool canAccess = await _manager.Authorization.CanAccessProjectAsync(accountId!, project);
                 if (!canAccess)
-                    throw new AccessViolationException("Bu proje üyesine erişim izniniz yok.");
+                    throw new ForbiddenException("Bu proje üyesine erişim izniniz yok.");
             }
 
             var member = await GetProjectMemberByIdForServiceAsync(project.ProjectSequence, memberId, false);
@@ -442,7 +442,7 @@ namespace Services
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu projeye üye ekleme izniniz yok.");
+                    throw new ForbiddenException("Bu projeye üye ekleme izniniz yok.");
             }
 
             var existingMember = await _manager.Project.GetMemberByAccountIdAsync(project.ProjectSequence, memberDto.AccountId!);
@@ -500,7 +500,7 @@ namespace Services
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu proje üyesini düzenleme izniniz yok.");
+                    throw new ForbiddenException("Bu proje üyesini düzenleme izniniz yok.");
             }
 
             var member = await GetProjectMemberByIdForServiceAsync(project.ProjectSequence, memberDto.Id, true);
@@ -536,7 +536,7 @@ namespace Services
                 bool canManage = await _manager.Authorization.CanManageProjectAsync(accountId!, project);
 
                 if (!canManage)
-                    throw new AccessViolationException("Bu proje üyesini silme izniniz yok.");
+                    throw new ForbiddenException("Bu proje üyesini silme izniniz yok.");
             }
 
             var member = await GetProjectMemberByIdForServiceAsync(project.ProjectSequence, memberId, true);

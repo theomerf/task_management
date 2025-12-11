@@ -9,12 +9,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGear, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { user, preferences } = useAppSelector((state) => state.account);
     const dispatch = useAppDispatch();
+    const queryClient = useQueryClient();
     const { down } = useBreakpoint();
     const isMobile = down.sm;
 

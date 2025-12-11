@@ -1,5 +1,5 @@
 export interface Project {
-    id: number;
+    id: string;
     name: string;
     icon: string;
     color: string;
@@ -12,7 +12,7 @@ export interface Project {
 }
 
 export interface ProjectDetails {
-    id: number;
+    id: string;
     name: string;
     description: string | null;
     icon: string;

@@ -22,6 +22,7 @@ namespace Repositories
                 .Include(t => t.AssignedTo)
                 .Include(t => t.Comments)
                 .Include(t => t.Attachments)
+                .Include(t => t.Label)
                 .AsSplitQuery()
                 .FilterBy(p.Title, p => p.Title, FilterOperator.Contains)
                 .FilterBy(p.Status, p => p.Status, FilterOperator.Equal)
@@ -36,6 +37,7 @@ namespace Repositories
                     AssignedToEmail = t.AssignedTo!.Email!,
                     Title = t.Title,
                     Status = t.Status,
+                    LabelId = t.Label!.Id,
                     Priority = t.Priority,
                     ProgressPercentage = t.ProgressPercentage,
                     CommentCount = t.Comments.Count,

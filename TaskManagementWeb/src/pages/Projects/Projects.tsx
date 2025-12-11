@@ -46,11 +46,13 @@ export default function Projects() {
             </div>
             <div className="w-full">
                 {isLoading && (
-                    <ClipLoader size={20} className="justify-center align-middle text-center" color="#a86032" />
+                    <div className="flex flex-1 justify-center items-center">
+                        <ClipLoader size={48} color="rgb(var(--text))" />;
+                    </div>
                 )}
 
                 {!isLoading && projects?.length === 0 && (
-                    <div className="bg-[rgb(var(--div))]/60 border border-[rgb(var(--border))]/6 p-6 justify-center items-center text-center rounded-lg mt-6">
+                    <div className="bg-[rgb(var(--div))]/60 border border-[rgb(var(--border))]/6 p-6 justify-center items-center text-lg text-center rounded-lg mt-6">
                         <p>
                             Henüz bir projeniz yok. Başlamak için "Yeni Proje" butonuna tıklayın!
                         </p>
@@ -60,7 +62,7 @@ export default function Projects() {
                 {!isLoading && projects?.length! > 0 && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 w-full gap-x-6">
                         {projects?.map((project) => (
-                            <Link to={`/project/${project.id}`} key={project.id} style={{ backgroundColor: project.color }} className="flex flex-col gap-y-3 text-white border-[rgb(var(--border))]/6 p-4 rounded-lg shadow-lg transition-all duration-500 hover:scale-[102%]">
+                            <Link to={`/projects/${project.id}`} key={project.id} style={{ backgroundColor: project.color }} className="flex flex-col gap-y-3 text-white border-[rgb(var(--border))]/6 p-4 rounded-lg shadow-lg transition-all duration-500 hover:scale-[102%]">
                                 <div className="flex flex-row items-center">
                                     <p className="lg:text-4xl bg-white rounded-lg p-1">{project.icon}</p>
                                     <h2 className="w-full text-center text-2xl font-semibold">{project.name}</h2>

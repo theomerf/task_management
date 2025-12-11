@@ -7,8 +7,8 @@ namespace Entities.Dtos
     {
         [Required(ErrorMessage = "Id alanı gereklidir.")]
         public Guid Id { get; set; }
-        [Required(ErrorMessage = "Atanan kullanıcı gereklidir.")]
-        public string AssignedToId { get; set; } = null!;
+        public bool NotAssigned { get; set; } = false;
+        public string? AssignedToId { get; set; }
         public Guid? LabelId { get; init; }
         [MinLength(5, ErrorMessage = "Açıklama en az 5 karakter olmalıdır.")]
         [MaxLength(2000, ErrorMessage = "Açıklama en fazla 2000 karakter olabilir.")]

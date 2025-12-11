@@ -13,6 +13,7 @@ import MainLayout from './components/layout/MainLayout'
 import Home from './pages/Home/Home'
 import Projects from './pages/Projects/Projects'
 import Tasks from './pages/Tasks/Tasks'
+import Project from './pages/Projects/Project'
 
 function App() {
   const dispatch: AppDispatch = useDispatch();
@@ -59,6 +60,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:projectId" element={<Project />} />
             <Route path="/tasks" element={<Tasks />} />
           </Route>
         </Route>

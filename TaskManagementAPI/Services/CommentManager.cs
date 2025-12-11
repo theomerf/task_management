@@ -28,7 +28,7 @@ namespace Services
                 : await _manager.Authorization.CanAccessCommentsAsync(accountId, projectId, isAdmin);
 
             if (!isAuthorized)
-                throw new AccessViolationException(errorMessage);
+                throw new ForbiddenException(errorMessage);
 
             return id!.Value;
         }
@@ -41,7 +41,7 @@ namespace Services
             var isAuthorized = _manager.Authorization.CanManageCommentsAsync(accountId, commentDto);
 
             if (!isAuthorized)
-                throw new AccessViolationException(errorMessage);
+                throw new ForbiddenException(errorMessage);
 
             return true;
         }

@@ -5,9 +5,8 @@ import App from './App.tsx'
 import { Provider } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import { store } from './store/store.ts'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-const queryClient = new QueryClient();
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './services/queryClient.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -13,6 +13,7 @@ namespace Services.Contracts
         System.Threading.Tasks.Task UpdateTaskAsync(Guid projectId, TaskDtoForUpdate taskDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task UpdateTaskStatusAsync(Guid projectId, TaskDtoForStatusUpdate taskDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task UpdateTaskPriorityAsync(Guid projectId, TaskDtoForPriorityUpdate taskDto, string accountId, bool isAdmin);
+        System.Threading.Tasks.Task UpdateTaskLabelAsync(Guid projectId, TaskDtoForLabelUpdate taskDto, string accountId, bool isAdmin);
         System.Threading.Tasks.Task DeleteTaskAsync(Guid projectId, Guid taskId, string accountId, bool isAdmin);
 
         // Attachment

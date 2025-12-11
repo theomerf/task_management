@@ -77,6 +77,15 @@ namespace Presentation.Controllers
             return Ok();
         }
 
+        [HttpPatch("update-label")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        public async Task<IActionResult> UpdateTaskLabel([FromRoute] Guid projectId, [FromBody] TaskDtoForLabelUpdate taskDto)
+        {
+            await _manager.TaskService.UpdateTaskLabelAsync(projectId, taskDto, UserId!, IsAdmin);
+
+            return Ok();
+        }
+
         [HttpDelete("delete/{taskId:guid}")] 
         public async Task<IActionResult> DeleteTask([FromRoute] Guid projectId, [FromRoute] Guid taskId)
         {
