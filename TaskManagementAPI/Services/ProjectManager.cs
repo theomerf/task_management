@@ -444,8 +444,13 @@ namespace Services
                 if (!canManage)
                     throw new ForbiddenException("Bu projeye üye ekleme izniniz yok.");
             }
+            
+            var account = await _userManager.FindByEmailAsync(memberDto.Email);
 
-            var existingMember = await _manager.Project.GetMemberByAccountIdAsync(project.ProjectSequence, memberDto.AccountId!);
+            if (account == null)
+                throw new AccountNotFoundException(memberDto.Email);
+
+            var existingMember = await _manager.Project.GetMemberByAccountIdAsync(project.ProjectSequence, account.Id);
 
             if (existingMember != null && existingMember.LeftAt == null)
                 throw new InvalidOperationException("Bu kullanıcı zaten projede aktif bir üye olarak bulunmaktadır.");
@@ -459,21 +464,19 @@ namespace Services
                 return;
             }
 
-            var account = await _userManager.FindByIdAsync(memberDto.AccountId!);
-
             var activityLog = new ActivityLog
             {
                 PerformedById = accountId,
                 RelatedProjectId = project.ProjectSequence,
                 Type = ActivityType.MemberAdded,
-                Description = $"Proje üyesi eklendi: {account!.Email}",
+                Description = $"Proje üyesi eklendi: {account.Email}",
                 CreatedAt = DateTime.UtcNow
             };
             _manager.ActivityLog.CreateActivityLog(activityLog);
 
             var notification = new Notification
             {
-                RecipientId = memberDto.AccountId!,
+                RecipientId = account.Id,
                 InitiatorId = accountId,
                 RelatedProjectId = project.ProjectSequence,
                 Type = NotificationType.ProjectInvitation,
@@ -485,7 +488,7 @@ namespace Services
 
             var member = _mapper.Map<ProjectMember>(memberDto);
             member.ProjectId = project.ProjectSequence;
-            member.AccountId = memberDto.AccountId;
+            member.AccountId = account.Id;
             _manager.Project.CreateProjectMember(member);
 
             await _manager.SaveAsync();

@@ -216,6 +216,7 @@ namespace Repositories
         {
             var member = await _context.ProjectMembers
                 .Where(m => m.ProjectId == projectId && m.AccountId == accountId)
+                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync();
 
             return member;

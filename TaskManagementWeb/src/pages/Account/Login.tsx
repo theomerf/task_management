@@ -76,9 +76,9 @@ export default function Login() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-y-12">
-                                    <button type="submit" disabled={status == "pending"} className="mt-5 w-full bg-[rgb(var(--btn-primary))] cursor-pointer font-medium shadow-lg border border-white/6 text-white p-2 rounded-lg hover:bg-gray-800 hover:scale-[103%] transition-all duration-500">
+                                    <button type="submit" disabled={status == "pending"} className="mt-5 w-full bg-[rgb(var(--btn-primary))] cursor-pointer font-medium shadow-lg border border-white/6 text-[rgb(var(--btn-primary-text))] p-2 rounded-lg hover:bg-[rgb(var(--btn-primary-hover))] hover:scale-[103%] transition-all duration-500">
                                         {status == "pending" ? (
-                                            <ClipLoader size={20} className="justify-center align-middle text-center" color="#fff" />
+                                            <ClipLoader size={20} className="justify-center align-middle text-center" color='rgb(var(--btn-primary-text))' />
                                         ) : (
                                             "Giriş Yap"
                                         )}

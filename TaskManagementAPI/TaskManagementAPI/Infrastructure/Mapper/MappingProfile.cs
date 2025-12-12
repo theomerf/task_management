@@ -29,7 +29,8 @@ namespace TaskManagementAPI.Infrastructure.Mapper
             CreateMap<ProjectMember, ProjectMemberDto>()
                 .ForMember(dest => dest.AccountEmail, opt => opt.MapFrom(src => src.Account!.Email))
                 .ForMember(dest => dest.AccountFirstName, opt => opt.MapFrom(src => src.Account!.FirstName))
-                .ForMember(dest => dest.AccountLastName, opt => opt.MapFrom(src => src.Account!.LastName));
+                .ForMember(dest => dest.AccountLastName, opt => opt.MapFrom(src => src.Account!.LastName))
+                .ForMember(dest => dest.AccountAvatarUrl, opt => opt.MapFrom(src => src.Account!.AvatarUrl));
             CreateMap<ProjectMemberDtoForCreation, ProjectMember>();
             CreateMap<ProjectMemberDtoForUpdate, ProjectMember>();
             CreateMap<Entities.Models.Task, TaskDetailsDto>()

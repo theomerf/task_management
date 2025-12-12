@@ -16,12 +16,12 @@ interface KanbanProps {
     isLoading: boolean;
     updateTask: UseMutateAsyncFunction<any, Error, TaskUpdateDTO, unknown>;
     updatePriority: UseMutateAsyncFunction<any, Error, {
-        taskId: string;
-        newPriority: string;
+        id: string;
+        priority: string;
     }, unknown>;
     updateLabel: UseMutateAsyncFunction<any, Error, {
-        taskId: string;
-        newLabelId: string;
+        id: string;
+        labelId: string;
     }, unknown>;
 }
 
@@ -87,10 +87,10 @@ const Kanban = ({ tasks, labels, isLoading, updateTask, updatePriority, updateLa
                         await updateTask(taskDto);
                     }
                     else if (changes.labelChanged) {
-                        await updateLabel({ taskId: changedTask.id, newLabelId: changedTask.labelId! });
+                        await updateLabel({ id: changedTask.id, labelId: changedTask.labelId! });
                     }
                     else if (changes.priorityChanged) {
-                        await updatePriority({ taskId: changedTask.id, newPriority: changedTask.priority });
+                        await updatePriority({ id: changedTask.id, priority: changedTask.priority });
                     }
                 })
             );
